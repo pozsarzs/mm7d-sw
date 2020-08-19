@@ -1,0 +1,44 @@
+MM7D - Air quality measuring device
+-----------------------------------
+
+1. About software
+~~~~~~~~~~~~~~~~~
+  It is an internal software for microcontroller based monitoring device.
+  This  device can measure temperature  and  humidity of growing  house  air,
+and  detect  some unwanted gas (CO2, NH3, NOx, alcohol, benzene etc.) and smoke,
+and has got three different color status LED. The measured values can be queried
+and LEDs can be turn on and off via wireless network via HTTP.
+
+Requirements
+
+  Hardware: ESP8266 Huzzah Breakout microcontroller
+  Software: Adafruit Unified Sensor library v1.1.4 by Adafruit Industries
+            DHT sensor library v1.3.10 by Adafruit Industries
+
+2. How to get installer package
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+a. Visit homepage (see later) to download installer packages:
+
+ Source code: mm7d-sw-0.1.tar.gz
+
+b. Download from Github
+
+  $ git clone https://github.com/pozsarzs/mm7d-sw.git
+
+3. Contact
+~~~~~~~~~~
+   Homepage:             <http://www.szerafingomba.hu/softwares/>
+   Author:               Pozsar Zsolt
+   Tax ID:               60407850-1-36
+   Registration num.:    20703695
+
+   E-mail:               <pozsar.zsolt@szerafingomba.hu>
+   Phone:                +36 56/470-272
+   Mobile:               +36 30/249-5030
+   Postal address:       Pozsar Zsolt
+                         Kurazsi Fo ut 1.
+                         HU-5430 Tiszafoldvar
+                         Hungary
+
+--------------------------------------------------------------------------------
+ MM7D * Copyright (C) 2020 Pozsar Zsolt <pozsar.zsolt@szerafingomba.hu>
