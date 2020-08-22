@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 Operating program for MM7D device
 ---------------------------------
 
@@ -9,6 +8,12 @@ detect some unwanted gas (CO2, NH3, NOx, alcohol, benzene etc.) and smoke, and
 has got three different color status LED. The measured values can be queried
 and LEDs can be turn on and off via wireless network via HTTP.
 
+Requirements:
+
+  Hardware: ESP8266 Huzzah Breakout microcontroller
+  Software: Adafruit Unified Sensor library v1.1.4 by Adafruit Industries
+            DHT sensor library v1.3.10 by Adafruit Industries
+
 2. How to get installer package?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 a. Visit homepage (see later) to download package:
@@ -16,30 +21,6 @@ a. Visit homepage (see later) to download package:
   architecture  operation system        filename
   --------------------------------------------------------
   (all)         (source code)           mm7d-sw-0.1.tar.gz
-=======
-MM7D - Air quality measuring device
------------------------------------
-
-1. About software
-~~~~~~~~~~~~~~~~~
-  It is an internal software for microcontroller based monitoring device.
-  This  device can measure temperature  and  humidity of growing  house  air,
-and  detect  some unwanted gas (CO2, NH3, NOx, alcohol, benzene etc.) and smoke,
-and has got three different color status LED. The measured values can be queried
-and LEDs can be turn on and off via wireless network via HTTP.
-
-Requirements
-
-  Hardware: ESP8266 Huzzah Breakout microcontroller
-  Software: Adafruit Unified Sensor library v1.1.4 by Adafruit Industries
-            DHT sensor library v1.3.10 by Adafruit Industries
-
-2. How to get installer package
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-a. Visit homepage (see later) to download installer packages:
-
- Source code: mm7d-sw-0.1.tar.gz
->>>>>>> 1825a6e303ea4e03dfb1eb379c154f0960b48bef
 
 b. Download from Github
 
@@ -47,10 +28,6 @@ b. Download from Github
 
 3. Contact
 ~~~~~~~~~~
-<<<<<<< HEAD
-
-=======
->>>>>>> 1825a6e303ea4e03dfb1eb379c154f0960b48bef
    Homepage:             <http://www.szerafingomba.hu/softwares/>
    Author:               Pozsar Zsolt
    Tax ID:               60407850-1-36
@@ -63,11 +40,5 @@ b. Download from Github
                          Kurazsi Fo ut 1.
                          HU-5430 Tiszafoldvar
                          Hungary
-
-<<<<<<< HEAD
----------------------------------------------------------------------------------
- MM3DRead * Copyright (C) 2020 Pozsar Zsolt <pozsar.zsolt@szerafingomba.hu>
-=======
 --------------------------------------------------------------------------------
  MM7D * Copyright (C) 2020 Pozsar Zsolt <pozsar.zsolt@szerafingomba.hu>
->>>>>>> 1825a6e303ea4e03dfb1eb379c154f0960b48bef
