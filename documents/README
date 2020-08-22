@@ -3,6 +3,7 @@ Operating program for MM7D device
 
 1. About software
 ~~~~~~~~~~~~~~~~~
+  It is an internal software for air quality measuring device.
   This device can measure temperature and humidity of growing house air, and
 detect some unwanted gas (CO2, NH3, NOx, alcohol, benzene etc.) and smoke, and
 has got three different color status LED. The measured values can be queried
@@ -40,5 +41,6 @@ b. Download from Github
                          Kurazsi Fo ut 1.
                          HU-5430 Tiszafoldvar
                          Hungary
+
 --------------------------------------------------------------------------------
  MM7D * Copyright (C) 2020 Pozsar Zsolt <pozsar.zsolt@szerafingomba.hu>
