@@ -1,0 +1,40 @@
+Operating program for MM7D device
+---------------------------------
+
+1. About software
+~~~~~~~~~~~~~~~~~
+  This device can measure temperature and humidity of growing house air, and
+detect some unwanted gas (CO2, NH3, NOx, alcohol, benzene etc.) and smoke, and
+has got three different color status LED. The measured values can be queried
+and LEDs can be turn on and off via wireless network via HTTP.
+
+2. How to get installer package?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+a. Visit homepage (see later) to download package:
+
+  architecture  operation system        filename
+  --------------------------------------------------------
+  (all)         (source code)           mm7d-sw-0.1.tar.gz
+
+b. Download from Github
+
+  $ git clone https://github.com/pozsarzs/mm7d-sw.git
+
+3. Contact
+~~~~~~~~~~
+
+   Homepage:             <http://www.szerafingomba.hu/softwares/>
+   Author:               Pozsar Zsolt
+   Tax ID:               60407850-1-36
+   Registration num.:    20703695
+
+   E-mail:               <pozsar.zsolt@szerafingomba.hu>
+   Phone:                +36 56/470-272
+   Mobile:               +36 30/249-5030
+   Postal address:       Pozsar Zsolt
+                         Kurazsi Fo ut 1.
+                         HU-5430 Tiszafoldvar
+                         Hungary
+
+---------------------------------------------------------------------------------
+ MM3DRead * Copyright (C) 2020 Pozsar Zsolt <pozsar.zsolt@szerafingomba.hu>

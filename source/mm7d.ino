@@ -22,7 +22,7 @@
 // settings
 const char* wifi_ssid       = "";
 const char* wifi_password   = "";
-const String www_username   = "";
+const String uid            = "";
 const String allowedaddress = "";
 
 // GPIO ports
@@ -153,7 +153,7 @@ void setup(void)
            "<tr><td><a href=\"http://" + localipaddress + "/set/yellowled/on\">http://" + localipaddress + "/set/yellowled/on</a></td><td>Switch on yellow LED<sup>*</sup></td></tr>"
            "<tr><td><a href=\"http://" + localipaddress + "/set/redled/off\">http://" + localipaddress + "/set/redled/off</a></td><td>Switch off red LED<sup>*</sup></td></tr>"
            "<tr><td><a href=\"http://" + localipaddress + "/set/redled/on\">http://" + localipaddress + "/set/redled/on</a></td><td>Switch on red LED<sup>*</sup></td></tr>"
-           "</table><br><sup>*</sup>Use <i>username</i> argument!<br>"
+           "</table><br><sup>*</sup>Use <i>uid</i> argument!<br>"
            "<hr><center>" + msg02 + " <a href=\"mailto:" + msg03 + "\">" + msg28 + "</a> - <a href=\"" + msg04 + "\">Homepage</a><center><br><body></html>";
     server.send(200, "text/html", line);
     delay(100);
@@ -173,7 +173,7 @@ void setup(void)
     Serial.println(msg13 + clientaddress + ".");
     if (clientaddress == allowedaddress)
     {
-      if (checkusername() == 1)
+      if (checkuid() == 1)
       {
         getunwantedgaslevel();
         gettemphum();
@@ -199,7 +199,7 @@ void setup(void)
     Serial.println(msg13 + clientaddress + ".");
     if (clientaddress == allowedaddress)
     {
-      if (checkusername() == 1)
+      if (checkuid() == 1)
       {
         getunwantedgaslevel();
         line = String((int)unwantedgaslevel);
@@ -224,7 +224,7 @@ void setup(void)
     Serial.println(msg13 + clientaddress + ".");
     if (clientaddress == allowedaddress)
     {
-      if (checkusername() == 1)
+      if (checkuid() == 1)
       {
         gettemphum();
         line = String((int)humidity);
@@ -249,7 +249,7 @@ void setup(void)
     Serial.println(msg13 + clientaddress + ".");
     if (clientaddress == allowedaddress)
     {
-      if (checkusername() == 1)
+      if (checkuid() == 1)
       {
         gettemphum();
         line = String((int)temperature);
@@ -275,7 +275,7 @@ void setup(void)
     Serial.println(msg13 + clientaddress + ".");
     if (clientaddress == allowedaddress)
     {
-      if (checkusername() == 1)
+      if (checkuid() == 1)
       {
         greenled(0);
         redled(0);
@@ -302,7 +302,7 @@ void setup(void)
     Serial.println(msg13 + clientaddress + ".");
     if (clientaddress == allowedaddress)
     {
-      if (checkusername() == 1)
+      if (checkuid() == 1)
       {
         greenled(0);
         server.send(200, "text/plain", msg27);
@@ -327,7 +327,7 @@ void setup(void)
     Serial.println(msg13 + clientaddress + ".");
     if (clientaddress == allowedaddress)
     {
-      if (checkusername() == 1)
+      if (checkuid() == 1)
       {
         greenled(1);
         server.send(200, "text/plain", msg27);
@@ -352,7 +352,7 @@ void setup(void)
     Serial.println(msg13 + clientaddress + ".");
     if (clientaddress == allowedaddress)
     {
-      if (checkusername() == 1)
+      if (checkuid() == 1)
       {
         redled(0);
         server.send(200, "text/plain", msg27);
@@ -377,7 +377,7 @@ void setup(void)
     Serial.println(msg13 + clientaddress + ".");
     if (clientaddress == allowedaddress)
     {
-      if (checkusername() == 1)
+      if (checkuid() == 1)
       {
         redled(1);
         server.send(200, "text/plain", msg27);
@@ -402,7 +402,7 @@ void setup(void)
     Serial.println(msg13 + clientaddress + ".");
     if (clientaddress == allowedaddress)
     {
-      if (checkusername() == 1)
+      if (checkuid() == 1)
       {
         yellowled(0);
         server.send(200, "text/plain", msg27);
@@ -427,7 +427,7 @@ void setup(void)
     Serial.println(msg13 + clientaddress + ".");
     if (clientaddress == allowedaddress)
     {
-      if (checkusername() == 1)
+      if (checkuid() == 1)
       {
         yellowled(1);
         server.send(200, "text/plain", msg27);
@@ -552,9 +552,9 @@ void gettemphum()
 }
 
 // authentication
-int checkusername()
+int checkuid()
 {
-  if (server.arg("username") == www_username)
+  if (server.arg("uid") == uid)
   {
     return 1;
   } else
