@@ -29,8 +29,8 @@ const String allowedaddress = "";
 const int prt_buzzer        = 14;
 const int prt_led_blue      = 2;
 const int prt_led_green     = 0;
-const int prt_led_red       = 4;
-const int prt_led_yellow    = 5;
+const int prt_led_red       = 5;
+const int prt_led_yellow    = 4;
 const int prt_sensor1       = 12;
 
 // ADC input
