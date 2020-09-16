@@ -1,6 +1,6 @@
 **MM7D * Air quality measuring device**  
 Copyright (C) 2020 Pozsár Zsolt <pozsar.zsolt@szerafingomba.hu>  
-Homepage: <http://www.szerafingomba.hu/equipments/>  
+Homepage: <http://www.szerafingomba.hu/softwares/>  
 GitHub: <https://github.com/pozsarzs/mm7d-sw>
 
 **Software**
@@ -16,3 +16,4 @@ GitHub: <https://github.com/pozsarzs/mm7d-sw>
 
  - Adafruit Unified Sensor library v1.1.4 by Adafruit Industries
  - DHT sensor library v1.3.10 by Adafruit Industries
+ - Arduino String Splitter Library v1.0.0 by Harsha Alva
