@@ -21,10 +21,11 @@
 #define TYP_SENSOR1 DHT11
 
 // settings
-const char* wifi_ssid       = "SzerafinGomba";  // SSID of Wi-Fi AP
-const char* wifi_password   = "Hal4csk4Macsk4";  // password of Wi-Fi AP
-const String uid            = "B0b0rj4n"; // user ID
-const String allowedaddress = "192.168.1.8 192.168.1.9 192.168.1.10";  // client IP addresses with space delimiter
+const char* wifi_ssid       = "";  // SSID of Wi-Fi AP
+const char* wifi_password   = "";  // password of Wi-Fi AP
+const String serialnumber   = "";  // serial number
+const String uid            = ""; // user ID
+const String allowedaddress = "";  // client IP addresses with space delimiter
 
 // GPIO ports
 const int prt_buzzer        = 14;
@@ -39,7 +40,7 @@ const int prt_sensor2       = 0;
 
 // messages
 const String msg01          = "MM7D * Air quality measuring device";
-const String msg02          = "Copyright (C) 2020";
+const String msg02          = "Copyright (C) 2020-2021";
 const String msg03          = "pozsar.zsolt@szerafingomba.hu";
 const String msg04          = "http://www.szerafingomba.hu/equipments/";
 const String msg05          = "* Initializing GPIO ports...";
@@ -58,9 +59,9 @@ const String msg17          = "Authentication error!";
 const String msg18          = "* E03: Authentication error!";
 const String msg19          = "Not allowed client IP address!";
 const String msg20          = "* E04: Not allowed client IP address!";
-const String msg21          = "* Green";
-const String msg22          = "* Red";
-const String msg23          = "* Yellow";
+const String msg21          = "  green";
+const String msg22          = "  red";
+const String msg23          = "  yellow";
 const String msg24          = " LED is switched ";
 const String msg25          = "on.";
 const String msg26          = "off.";
@@ -68,11 +69,26 @@ const String msg27          = "Done.";
 const String msg28          = "Pozsar Zsolt";
 const String msg29          = "  device MAC address: ";
 const String msg30          = "Page not found!";
-const String msg31          = "* E05: Page not found!";
+const String msg31          = "Serial number of hardware: ";
+const String msg32          = "  get homepage";
+const String msg33          = "  get version data";
+const String msg34          = "  get all measured data";
+const String msg35          = "  get relative unwanted gas level";
+const String msg36          = "  get relative humidity";
+const String msg37          = "  get temperature";
+const String msg38          = "  get all measured data and set limit values";
+const String msg39          = "  gas level:\t";
+const String msg40          = "  humidity:\t";
+const String msg41          = "  temperature:\t";
+const String msg42          = "* Periodic measure.";
+const String msg43          = "  limit values:";
+const String msg44          = "  Not enough argument!";
+
 
 // general constants
 const int maxadcvalue       = 1024;
-const long interval         = 2000;
+const long interval1        = 2000;
+const long interval3        = 60000;
 const String swversion      = "0.2";
 
 // variables
@@ -84,6 +100,7 @@ String line;
 String localipaddress;
 unsigned long prevtime1     = 0;
 unsigned long prevtime2     = 0;
+unsigned long prevtime3     = 0;
 int h1, h2, h3, h4;
 int t1, t2, t3, t4;
 int g;
@@ -100,6 +117,7 @@ void setup(void)
   Serial.println("");
   Serial.println(msg01 + " * v" + swversion );
   Serial.println(msg02 +  " " + msg28 + " <" + msg03 + ">");
+  Serial.println(msg31 + serialnumber );
   // initialize ports
   Serial.print(msg05);
   pinMode(prt_buzzer, OUTPUT);
@@ -138,6 +156,7 @@ void setup(void)
   server.on("/", []()
   {
     writeclientipaddress();
+    Serial.println(msg32);
     line = "<html>\n"
            "  <head>\n"
            "    <title>" + msg01 + "</title>\n"
@@ -145,6 +164,7 @@ void setup(void)
            "  <body bgcolor=\"#e2f4fd\">\n"
            "    <h2>" + msg01 + "</h2>\n"
            "    <br>\n"
+           "    Hardware serial number: " + serialnumber + "<br>\n"
            "    Software version: v" + swversion + "<br>\n"
            "    <hr>\n"
            "    <h3>Plain text data and control pages:</h3>\n"
@@ -162,11 +182,11 @@ void setup(void)
            "      <tr><td colspan=\"2\">&nbsp;</td></tr>\n"
            "      <tr>\n"
            "        <td>http://" + localipaddress + "/get/all?uid=abcdef</a></td>\n"
-           "        <td>Get all data<sup>*</sup></td>\n"
+           "        <td>Get all data</td>\n"
            "      </tr>\n"
            "      <tr>\n"
            "        <td>http://" + localipaddress + "/get/humidity?uid=abcdef</a></td>\n"
-           "        <td>Get relative humidity in %<sup>*</sup></td>\n"
+           "        <td>Get relative humidity in %</td>\n"
            "      </tr>\n"
            "      <tr>\n"
            "        <td>http://" + localipaddress + "/get/temperature?uid=abcdef</a></td>\n"
@@ -220,7 +240,8 @@ void setup(void)
   server.on("/version", []()
   {
     writeclientipaddress();
-    line = msg16 + "\n" + swversion;
+    Serial.println(msg33);
+    line = msg16 + "\n" + swversion + "\n" + serialnumber;
     server.send(200, "text/plain", line);
     delay(100);
   });
@@ -230,35 +251,10 @@ void setup(void)
     if (checkipaddress() == 1)
       if (checkuid() == 1)
       {
+        Serial.println(msg38);
         getunwantedgaslevel();
         gettemphum();
-        int green = 0;
-        int yellow = 0;
-        int red = 0;
-        if ((setlimitvalues == 0) && (unwantedgaslevel != 999) && (humidity != 999) && (temperature != 999))
-        {
-          if ((int)unwantedgaslevel < g) green = 1;
-          if ((int)unwantedgaslevel == g) yellow = 1;
-          if ((int)unwantedgaslevel > g) red = 1;
-          if ((int)humidity < h1) red = 1;
-          if (((int)humidity > h1) || ((int)humidity < h2)) yellow = 1;
-          if (((int)humidity > h2) || ((int)humidity < h3)) green = 1;
-          if (((int)humidity > h3) || ((int)humidity < h4)) yellow = 1;
-          if ((int)humidity > h4) red = 1;
-          if ((int)temperature < t1) red = 1;
-          if (((int)temperature > t1) || ((int)humidity < t2)) yellow = 1;
-          if (((int)temperature > t2) || ((int)humidity < t3)) green = 1;
-          if (((int)temperature > t3) || ((int)humidity < t4)) yellow = 1;
-          if ((int)temperature > t4) red = 1;
-          if (red == 1)
-          {
-            green = 0;
-            yellow = 0;
-          }
-        }
-        greenled(green);
-        yellowled(yellow);
-        redled(red);
+        if (setlimitvalues() == 0) leds();
         line = String((int)unwantedgaslevel) + "\n" + String((int)humidity) + "\n" + String((int)temperature);
         server.send(200, "text/plain", line);
       } else
@@ -273,6 +269,7 @@ void setup(void)
     if (checkipaddress() == 1)
       if (checkuid() == 1)
       {
+        Serial.println(msg34);
         getunwantedgaslevel();
         gettemphum();
         line = String((int)unwantedgaslevel) + "\n" + String((int)humidity) + "\n" + String((int)temperature);
@@ -289,6 +286,7 @@ void setup(void)
     if (checkipaddress() == 1)
       if (checkuid() == 1)
       {
+        Serial.println(msg35);
         getunwantedgaslevel();
         line = String((int)unwantedgaslevel);
         server.send(200, "text/plain", line);
@@ -304,6 +302,7 @@ void setup(void)
     if (checkipaddress() == 1)
       if (checkuid() == 1)
       {
+        Serial.println(msg36);
         gettemphum();
         line = String((int)humidity);
         server.send(200, "text/plain", line);
@@ -319,6 +318,7 @@ void setup(void)
     if (checkipaddress() == 1)
       if (checkuid() == 1)
       {
+        Serial.println(msg37);
         gettemphum();
         line = String((int)temperature);
         server.send(200, "text/plain", line);
@@ -437,13 +437,22 @@ void setup(void)
 void handleNotFound()
 {
   server.send(404, "text/plain", msg30);
-  Serial.println(msg31);
+  Serial.println(msg30);
 }
 
 // loop function
 void loop(void)
 {
   server.handleClient();
+  unsigned long currtime3 = millis();
+  if (currtime3 - prevtime3 >= interval3)
+  {
+    prevtime3 = currtime3;
+    Serial.println(msg42);
+    getunwantedgaslevel();
+    gettemphum();
+    leds();
+  }
 }
 
 // switch on/off green LED
@@ -488,11 +497,43 @@ void yellowled(int i)
   }
 }
 
+// switch on/off all LED
+void leds()
+{
+  int green = 0;
+  int yellow = 0;
+  int red = 0;
+  if ((unwantedgaslevel != 999) && (humidity != 999) && (temperature != 999))
+  {
+    if ((int)unwantedgaslevel < g) green = 1;
+    if ((int)unwantedgaslevel == g) yellow = 1;
+    if ((int)unwantedgaslevel > g) red = 1;
+    if ((int)humidity < h1) red = 1;
+    if (((int)humidity > h1) && ((int)humidity < h2)) yellow = 1;
+    if (((int)humidity > h2) && ((int)humidity < h3)) green = 1;
+    if (((int)humidity > h3) && ((int)humidity < h4)) yellow = 1;
+    if ((int)humidity > h4) red = 1;
+    if ((int)temperature < t1) red = 1;
+    if (((int)temperature > t1) && ((int)temperature < t2)) yellow = 1;
+    if (((int)temperature > t2) && ((int)temperature < t3)) green = 1;
+    if (((int)temperature > t3) && ((int)temperature < t4)) yellow = 1;
+    if ((int)temperature > t4) red = 1;
+    if (red == 1)
+    {
+      green = 0;
+      yellow = 0;
+    }
+    greenled(green);
+    yellowled(yellow);
+    redled(red);
+  }
+}
+
 // get air quality
 void getunwantedgaslevel()
 {
   unsigned long currtime1 = millis();
-  if (currtime1 - prevtime1 >= interval)
+  if (currtime1 - prevtime1 >= interval1)
   {
     prevtime1 = currtime1;
     adcvalue = analogRead(prt_sensor2);
@@ -503,7 +544,7 @@ void getunwantedgaslevel()
       Serial.println(msg14);
       unwantedgaslevel = 999;
       return;
-    }
+    } else Serial.println(msg39 + String((int)unwantedgaslevel) + "%");
   }
 }
 
@@ -511,7 +552,7 @@ void getunwantedgaslevel()
 void gettemphum()
 {
   unsigned long currtime2 = millis();
-  if (currtime2 - prevtime2 >= interval)
+  if (currtime2 - prevtime2 >= interval1)
   {
     prevtime2 = currtime2;
     humidity = dht.readHumidity();
@@ -523,7 +564,7 @@ void gettemphum()
       temperature = 999;
       humidity = 999;
       return;
-    }
+    } else Serial.println(msg40 + String((int)humidity) + "%\n" + msg41 + String((int)temperature) + " °C");
   }
 }
 
@@ -558,7 +599,7 @@ int checkipaddress()
   }
 }
 
-// limit values
+// set limit values
 int setlimitvalues()
 {
   if (server.args() > 9)
@@ -582,8 +623,16 @@ int setlimitvalues()
     if (arg.length() != 0) t3 = arg.toInt(); else return 1;
     arg = server.arg("t4");
     if (arg.length() != 0) t4 = arg.toInt(); else return 1;
-  } else return 1;
-  return 0;
+    Serial.println(msg43);
+    Serial.println(msg39 + String(g) + "%");
+    Serial.println(msg40 + String(h1) + "%; " + String(h2) + "%; " + String(h3) + "%; " + String(h4) + "%" );
+    Serial.println(msg41 + String(t1) + "°C; " + String(t2) + "°C; " + String(t3) + "°C; " + String(t4) + "°C" );
+    return 0;
+  } else
+  {
+    Serial.println(msg44);
+    return 1;
+  }
 }
 
 // authentication
