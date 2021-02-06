@@ -24,7 +24,7 @@
 const char* wifi_ssid       = "";  // SSID of Wi-Fi AP
 const char* wifi_password   = "";  // password of Wi-Fi AP
 const String serialnumber   = "";  // serial number
-const String uid            = ""; // user ID
+const String uid            = "";  // user ID
 const String allowedaddress = "";  // client IP addresses with space delimiter
 
 // GPIO ports
@@ -68,7 +68,7 @@ const String msg26          = "off.";
 const String msg27          = "Done.";
 const String msg28          = "Pozsar Zsolt";
 const String msg29          = "  device MAC address: ";
-const String msg30          = "Page not found!";
+const String msg30          = "  Page not found!";
 const String msg31          = "Serial number of hardware: ";
 const String msg32          = "  get homepage";
 const String msg33          = "  get version data";
@@ -77,12 +77,13 @@ const String msg35          = "  get relative unwanted gas level";
 const String msg36          = "  get relative humidity";
 const String msg37          = "  get temperature";
 const String msg38          = "  get all measured data and set limit values";
-const String msg39          = "  gas level:\t";
-const String msg40          = "  humidity:\t";
-const String msg41          = "  temperature:\t";
+const String msg39          = "    gas level:\t\t";
+const String msg40          = "    humidity:\t\t";
+const String msg41          = "    temperature:\t";
 const String msg42          = "* Periodic measure.";
 const String msg43          = "  limit values:";
 const String msg44          = "  Not enough argument!";
+const String msg45          = "  measured data:";
 
 
 // general constants
@@ -252,6 +253,7 @@ void setup(void)
       if (checkuid() == 1)
       {
         Serial.println(msg38);
+        Serial.println(msg45);
         getunwantedgaslevel();
         gettemphum();
         if (setlimitvalues() == 0) leds();
@@ -270,6 +272,7 @@ void setup(void)
       if (checkuid() == 1)
       {
         Serial.println(msg34);
+        Serial.println(msg45);
         getunwantedgaslevel();
         gettemphum();
         line = String((int)unwantedgaslevel) + "\n" + String((int)humidity) + "\n" + String((int)temperature);
@@ -287,6 +290,7 @@ void setup(void)
       if (checkuid() == 1)
       {
         Serial.println(msg35);
+        Serial.println(msg45);
         getunwantedgaslevel();
         line = String((int)unwantedgaslevel);
         server.send(200, "text/plain", line);
@@ -303,6 +307,7 @@ void setup(void)
       if (checkuid() == 1)
       {
         Serial.println(msg36);
+        Serial.println(msg45);
         gettemphum();
         line = String((int)humidity);
         server.send(200, "text/plain", line);
@@ -319,6 +324,7 @@ void setup(void)
       if (checkuid() == 1)
       {
         Serial.println(msg37);
+        Serial.println(msg45);
         gettemphum();
         line = String((int)temperature);
         server.send(200, "text/plain", line);
@@ -436,6 +442,7 @@ void setup(void)
 // error 404
 void handleNotFound()
 {
+  writeclientipaddress();
   server.send(404, "text/plain", msg30);
   Serial.println(msg30);
 }
@@ -449,6 +456,7 @@ void loop(void)
   {
     prevtime3 = currtime3;
     Serial.println(msg42);
+    Serial.println(msg45);
     getunwantedgaslevel();
     gettemphum();
     leds();
@@ -564,7 +572,11 @@ void gettemphum()
       temperature = 999;
       humidity = 999;
       return;
-    } else Serial.println(msg40 + String((int)humidity) + "%\n" + msg41 + String((int)temperature) + " °C");
+    } else
+    {
+      Serial.println(msg40 + String((int)humidity) + "%");
+      Serial.println(msg41 + String((int)temperature) + " °C");
+    }
   }
 }
 

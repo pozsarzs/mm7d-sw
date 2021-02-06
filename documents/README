@@ -21,7 +21,7 @@ a. Visit homepage (see later) to download package:
 
   architecture  operation system        filename
   --------------------------------------------------------
-  (all)         (source code)           mm7d-sw-0.1.tar.gz
+  (all)         (source code)           mm7d-sw-0.2.tar.gz
 
 b. Download from Github
 
@@ -43,4 +43,4 @@ b. Download from Github
                          Hungary
 
 --------------------------------------------------------------------------------
- MM7D * Copyright (C) 2020 Pozsar Zsolt <pozsar.zsolt@szerafingomba.hu>
+ MM7D * Copyright (C) 2020-2021 Pozsar Zsolt <pozsar.zsolt@szerafingomba.hu>

@@ -1,0 +1,13 @@
+mm7d (0.2) unstable; urgency=low
+
+  * Added a new combined "set and get" function.
+  * Detailed messages on console.
+  * Periodic measure and switch status LEDs
+
+ -- Pozsar Zsolt <pozsar.zsolt@szerafingomba.hu>  Sat, 06 Feb 2021 15:31:38
+
+mm7d (0.1) unstable; urgency=low
+
+  * Initial Release.
+
+ -- Pozsar Zsolt <pozsar.zsolt@szerafingomba.hu>  Tue, 25 Aug 2020 18:25:00
