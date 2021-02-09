@@ -21,9 +21,9 @@
 #define TYP_SENSOR1 DHT11
 
 // settings
+const String serialnumber   = "";  // serial number
 const char* wifi_ssid       = "";  // SSID of Wi-Fi AP
 const char* wifi_password   = "";  // password of Wi-Fi AP
-const String serialnumber   = "";  // serial number
 const String uid            = "";  // user ID
 const String allowedaddress = "";  // client IP addresses with space delimiter
 
@@ -84,7 +84,7 @@ const String msg42          = "* Periodic measure.";
 const String msg43          = "  limit values:";
 const String msg44          = "  Not enough argument!";
 const String msg45          = "  measured data:";
-
+const String msg46          = "* E05: Page not found!";
 
 // general constants
 const int maxadcvalue       = 1024;
@@ -259,10 +259,6 @@ void setup(void)
         if (setlimitvalues() == 0) leds();
         line = String((int)unwantedgaslevel) + "\n" + String((int)humidity) + "\n" + String((int)temperature);
         server.send(200, "text/plain", line);
-      } else
-      {
-        server.send(401, "text/plain", msg17);
-        Serial.println(msg18);
       }
   });
   // write all measured parameters as plain text
@@ -277,10 +273,6 @@ void setup(void)
         gettemphum();
         line = String((int)unwantedgaslevel) + "\n" + String((int)humidity) + "\n" + String((int)temperature);
         server.send(200, "text/plain", line);
-      } else
-      {
-        server.send(401, "text/plain", msg17);
-        Serial.println(msg18);
       }
   });
   // write relative unwanted gas level as plain text
@@ -294,10 +286,6 @@ void setup(void)
         getunwantedgaslevel();
         line = String((int)unwantedgaslevel);
         server.send(200, "text/plain", line);
-      } else
-      {
-        server.send(401, "text/plain", msg17);
-        Serial.println(msg18);
       }
   });
   // write relative humidity as plain text
@@ -311,10 +299,6 @@ void setup(void)
         gettemphum();
         line = String((int)humidity);
         server.send(200, "text/plain", line);
-      } else
-      {
-        server.send(401, "text/plain", msg17);
-        Serial.println(msg18);
       }
   });
   // write temperature in degree Celsius as plain text
@@ -328,10 +312,6 @@ void setup(void)
         gettemphum();
         line = String((int)temperature);
         server.send(200, "text/plain", line);
-      } else
-      {
-        server.send(401, "text/plain", msg17);
-        Serial.println(msg18);
       }
   });
   // switch off all LEDs
@@ -344,10 +324,6 @@ void setup(void)
         redled(0);
         yellowled(0);
         server.send(200, "text/plain", msg27);
-      } else
-      {
-        server.send(401, "text/plain", msg17);
-        Serial.println(msg18);
       }
   });
   // switch off green LED
@@ -358,10 +334,6 @@ void setup(void)
       {
         greenled(0);
         server.send(200, "text/plain", msg27);
-      } else
-      {
-        server.send(401, "text/plain", msg17);
-        Serial.println(msg18);
       }
   });
   // switch on green LED
@@ -372,10 +344,6 @@ void setup(void)
       {
         greenled(1);
         server.send(200, "text/plain", msg27);
-      } else
-      {
-        server.send(401, "text/plain", msg17);
-        Serial.println(msg18);
       }
   });
   // switch off red LED
@@ -386,10 +354,6 @@ void setup(void)
       {
         redled(0);
         server.send(200, "text/plain", msg27);
-      } else
-      {
-        server.send(401, "text/plain", msg17);
-        Serial.println(msg18);
       }
   });
   // switch on red LED
@@ -400,10 +364,6 @@ void setup(void)
       {
         redled(1);
         server.send(200, "text/plain", msg27);
-      } else
-      {
-        server.send(401, "text/plain", msg17);
-        Serial.println(msg18);
       }
   });
   // switch off yellow LED
@@ -414,10 +374,6 @@ void setup(void)
       {
         yellowled(0);
         server.send(200, "text/plain", msg27);
-      } else
-      {
-        server.send(401, "text/plain", msg17);
-        Serial.println(msg18);
       }
   });
   // switch on yellow LED
@@ -428,10 +384,6 @@ void setup(void)
       {
         yellowled(1);
         server.send(200, "text/plain", msg27);
-      } else
-      {
-        server.send(401, "text/plain", msg17);
-        Serial.println(msg18);
       }
   });
   server.begin();
@@ -443,8 +395,8 @@ void setup(void)
 void handleNotFound()
 {
   writeclientipaddress();
+  Serial.println(msg46);
   server.send(404, "text/plain", msg30);
-  Serial.println(msg30);
 }
 
 // loop function
@@ -502,6 +454,42 @@ void yellowled(int i)
   {
     digitalWrite(prt_led_yellow, HIGH);
     Serial.println(msg23 + msg24 + msg25);
+  }
+}
+
+// set limit values
+int setlimitvalues()
+{
+  if (server.args() > 9)
+  {
+    String arg;
+    arg = server.arg("g");
+    if (arg.length() != 0) g = arg.toInt(); else return 1;
+    arg = server.arg("h1");
+    if (arg.length() != 0) h1 = arg.toInt(); else return 1;
+    arg = server.arg("h2");
+    if (arg.length() != 0) h2 = arg.toInt(); else return 1;
+    arg = server.arg("h3");
+    if (arg.length() != 0) h3 = arg.toInt(); else return 1;
+    arg = server.arg("h4");
+    if (arg.length() != 0) h4 = arg.toInt(); else return 1;
+    arg = server.arg("t1");
+    if (arg.length() != 0) t1 = arg.toInt(); else return 1;
+    arg = server.arg("t2");
+    if (arg.length() != 0) t2 = arg.toInt(); else return 1;
+    arg = server.arg("t3");
+    if (arg.length() != 0) t3 = arg.toInt(); else return 1;
+    arg = server.arg("t4");
+    if (arg.length() != 0) t4 = arg.toInt(); else return 1;
+    Serial.println(msg43);
+    Serial.println(msg39 + String(g) + "%");
+    Serial.println(msg40 + String(h1) + "%; " + String(h2) + "%; " + String(h3) + "%; " + String(h4) + "%" );
+    Serial.println(msg41 + String(t1) + "°C; " + String(t2) + "°C; " + String(t3) + "°C; " + String(t4) + "°C" );
+    return 0;
+  } else
+  {
+    Serial.println(msg44);
+    return 1;
   }
 }
 
@@ -611,47 +599,13 @@ int checkipaddress()
   }
 }
 
-// set limit values
-int setlimitvalues()
-{
-  if (server.args() > 9)
-  {
-    String arg;
-    arg = server.arg("g");
-    if (arg.length() != 0) g = arg.toInt(); else return 1;
-    arg = server.arg("h1");
-    if (arg.length() != 0) h1 = arg.toInt(); else return 1;
-    arg = server.arg("h2");
-    if (arg.length() != 0) h2 = arg.toInt(); else return 1;
-    arg = server.arg("h3");
-    if (arg.length() != 0) h3 = arg.toInt(); else return 1;
-    arg = server.arg("h4");
-    if (arg.length() != 0) h4 = arg.toInt(); else return 1;
-    arg = server.arg("t1");
-    if (arg.length() != 0) t1 = arg.toInt(); else return 1;
-    arg = server.arg("t2");
-    if (arg.length() != 0) t2 = arg.toInt(); else return 1;
-    arg = server.arg("t3");
-    if (arg.length() != 0) t3 = arg.toInt(); else return 1;
-    arg = server.arg("t4");
-    if (arg.length() != 0) t4 = arg.toInt(); else return 1;
-    Serial.println(msg43);
-    Serial.println(msg39 + String(g) + "%");
-    Serial.println(msg40 + String(h1) + "%; " + String(h2) + "%; " + String(h3) + "%; " + String(h4) + "%" );
-    Serial.println(msg41 + String(t1) + "°C; " + String(t2) + "°C; " + String(t3) + "°C; " + String(t4) + "°C" );
-    return 0;
-  } else
-  {
-    Serial.println(msg44);
-    return 1;
-  }
-}
-
 // authentication
 int checkuid()
 {
   if (server.arg("uid") == uid) return 1; else
   {
+    server.send(401, "text/plain", msg17);
+    Serial.println(msg18);
     beep(2);
     return 0;
   }
