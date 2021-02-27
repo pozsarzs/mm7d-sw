@@ -1,5 +1,5 @@
 // +---------------------------------------------------------------------------+
-// | MM7D v0.2 * Air quality measuring device                                  |
+// | MM7D v0.21 * Air quality measuring device                                 |
 // | Copyright (C) 2020-2021 Pozsár Zsolt <pozsar.zsolt@szerafingomba.hu>      |
 // | mm7d.ino                                                                  |
 // | Program for ESP8266 Huzzah Breakout                                       |
@@ -90,7 +90,7 @@ const String msg46          = "* E05: Page not found!";
 const int maxadcvalue       = 1024;
 const long interval1        = 2000;
 const long interval3        = 60000;
-const String swversion      = "0.2";
+const String swversion      = "0.21";
 
 // variables
 float humidity, temperature, unwantedgaslevel;
@@ -105,6 +105,7 @@ unsigned long prevtime3     = 0;
 int h1, h2, h3, h4;
 int t1, t2, t3, t4;
 int g;
+int green, yellow, red;
 
 DHT dht(prt_sensor1, TYP_SENSOR1, 11);
 ESP8266WebServer server(80);
@@ -244,7 +245,6 @@ void setup(void)
     Serial.println(msg33);
     line = msg16 + "\n" + swversion + "\n" + serialnumber;
     server.send(200, "text/plain", line);
-    delay(100);
   });
   // write all measured parameters as plain text and set limit values
   server.on("/operation", []()
@@ -253,9 +253,6 @@ void setup(void)
       if (checkuid() == 1)
       {
         Serial.println(msg38);
-        Serial.println(msg45);
-        getunwantedgaslevel();
-        gettemphum();
         if (setlimitvalues() == 0) leds();
         line = String((int)unwantedgaslevel) + "\n" + String((int)humidity) + "\n" + String((int)temperature);
         server.send(200, "text/plain", line);
@@ -268,9 +265,6 @@ void setup(void)
       if (checkuid() == 1)
       {
         Serial.println(msg34);
-        Serial.println(msg45);
-        getunwantedgaslevel();
-        gettemphum();
         line = String((int)unwantedgaslevel) + "\n" + String((int)humidity) + "\n" + String((int)temperature);
         server.send(200, "text/plain", line);
       }
@@ -282,8 +276,6 @@ void setup(void)
       if (checkuid() == 1)
       {
         Serial.println(msg35);
-        Serial.println(msg45);
-        getunwantedgaslevel();
         line = String((int)unwantedgaslevel);
         server.send(200, "text/plain", line);
       }
@@ -295,8 +287,6 @@ void setup(void)
       if (checkuid() == 1)
       {
         Serial.println(msg36);
-        Serial.println(msg45);
-        gettemphum();
         line = String((int)humidity);
         server.send(200, "text/plain", line);
       }
@@ -308,8 +298,6 @@ void setup(void)
       if (checkuid() == 1)
       {
         Serial.println(msg37);
-        Serial.println(msg45);
-        gettemphum();
         line = String((int)temperature);
         server.send(200, "text/plain", line);
       }
@@ -320,9 +308,9 @@ void setup(void)
     if (checkipaddress() == 1)
       if (checkuid() == 1)
       {
-        greenled(0);
-        redled(0);
-        yellowled(0);
+        green = 0;
+        red = 0;
+        yellow = 0;
         server.send(200, "text/plain", msg27);
       }
   });
@@ -332,7 +320,7 @@ void setup(void)
     if (checkipaddress() == 1)
       if (checkuid() == 1)
       {
-        greenled(0);
+        green = 0;
         server.send(200, "text/plain", msg27);
       }
   });
@@ -342,7 +330,7 @@ void setup(void)
     if (checkipaddress() == 1)
       if (checkuid() == 1)
       {
-        greenled(1);
+        green = 1;
         server.send(200, "text/plain", msg27);
       }
   });
@@ -352,7 +340,7 @@ void setup(void)
     if (checkipaddress() == 1)
       if (checkuid() == 1)
       {
-        redled(0);
+        red = 0;
         server.send(200, "text/plain", msg27);
       }
   });
@@ -362,7 +350,7 @@ void setup(void)
     if (checkipaddress() == 1)
       if (checkuid() == 1)
       {
-        redled(1);
+        red = 1;
         server.send(200, "text/plain", msg27);
       }
   });
@@ -372,7 +360,7 @@ void setup(void)
     if (checkipaddress() == 1)
       if (checkuid() == 1)
       {
-        yellowled(0);
+        yellow = 0;
         server.send(200, "text/plain", msg27);
       }
   });
@@ -382,7 +370,7 @@ void setup(void)
     if (checkipaddress() == 1)
       if (checkuid() == 1)
       {
-        yellowled(1);
+        yellow = 1;
         server.send(200, "text/plain", msg27);
       }
   });
@@ -412,6 +400,9 @@ void loop(void)
     getunwantedgaslevel();
     gettemphum();
     leds();
+    greenled(green);
+    yellowled(yellow);
+    redled(red);
   }
 }
 
@@ -519,9 +510,6 @@ void leds()
       green = 0;
       yellow = 0;
     }
-    greenled(green);
-    yellowled(yellow);
-    redled(red);
   }
 }
 

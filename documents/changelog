@@ -1,3 +1,9 @@
+mm7d (0.21) unstable; urgency=low
+
+  * Speeding up "server.on" functions
+
+ -- Pozsar Zsolt <pozsar.zsolt@szerafingomba.hu>  Sat, 27 Feb 2021 21:19:32
+
 mm7d (0.2) unstable; urgency=low
 
   * Added a new combined "set and get" function.
