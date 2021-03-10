@@ -1,5 +1,5 @@
 // +---------------------------------------------------------------------------+
-// | MM7D v0.21 * Air quality measuring device                                 |
+// | MM7D v0.2.1 * Air quality measuring device                                |
 // | Copyright (C) 2020-2021 Pozsár Zsolt <pozsar.zsolt@szerafingomba.hu>      |
 // | mm7d.ino                                                                  |
 // | Program for ESP8266 Huzzah Breakout                                       |
@@ -90,7 +90,7 @@ const String msg46          = "* E05: Page not found!";
 const int maxadcvalue       = 1024;
 const long interval1        = 2000;
 const long interval3        = 60000;
-const String swversion      = "0.21";
+const String swversion      = "0.2.1";
 
 // variables
 float humidity, temperature, unwantedgaslevel;
