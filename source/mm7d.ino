@@ -42,7 +42,26 @@ const long    interval3         = 60000;
 const String  texthtml          = "text/html";
 const String  textplain         = "text/plain";
 const String  swversion         = "0.3";
-
+// general variables
+bool          autoopmode        = false;
+float         humidity;
+float         temperature;
+float         unwantedgaslevel;
+int           adcvalue          = 0;
+int           g;
+int           green             = 0;
+int           h1, h2, h3, h4;
+int           syslog[256]       = {};
+int           red               = 0;
+int           t1, t2, t3, t4;
+int           yellow            = 0;
+String        clientaddress;
+String        deviceipaddress;
+String        devicemacaddress;
+String        line;
+unsigned long prevtime1         = 0;
+unsigned long prevtime2         = 0;
+unsigned long prevtime3         = 0;
 // messages
 String msg[60]                  =
 {
@@ -101,29 +120,10 @@ String msg[60]                  =
   "  set status of red LED",
   "  set automatic operation mode",
   "  set manual operation mode",
-  "  get system log"
+  "  get system log",
+  "  cannot set status of LEDs in manual mode",
+  "* HTTP request received.",
 };
-
-// general variables
-bool          autoopmode        = true;
-float         humidity;
-float         temperature;
-float         unwantedgaslevel;
-int           adcvalue          = 0;
-int           g;
-int           green;
-int           h1, h2, h3, h4;
-int           syslog[255];
-int           red;
-int           t1, t2, t3, t4;
-int           yellow;
-String        clientaddress;
-String        deviceipaddress;
-String        devicemacaddress;
-String        line;
-unsigned long prevtime1         = 0;
-unsigned long prevtime2         = 0;
-unsigned long prevtime3         = 0;
 
 DHT dht(prt_sensor1, TYP_SENSOR1, 11);
 ESP8266WebServer server(80);
@@ -133,9 +133,6 @@ void setup(void)
 {
   // set serial port
   Serial.begin(115200);
-  // clear system log
-  for (int i = 0; i < 256; i++)
-    syslog[i] = 0;
   // write program information
   Serial.println("");
   Serial.println("");
@@ -170,6 +167,8 @@ void setup(void)
     Serial.print(".");
   }
   Serial.println(msg[8]);
+  WiFi.setAutoReconnect(true);
+  WiFi.persistent(true);
   deviceipaddress = WiFi.localIP().toString();
   devicemacaddress = WiFi.macAddress();
   Serial.println(msg[29] + devicemacaddress);
@@ -311,8 +310,8 @@ void setup(void)
     if (checkipaddress() == 1)
       if (checkuid() == 1)
       {
-        Serial.println(msg[55]);
-        writesyslog(55);
+        Serial.println(msg[54]);
+        writesyslog(54);
         line =
           "<html>\n"
           "  <head>\n"
@@ -324,12 +323,12 @@ void setup(void)
           "    Hardware serial number: " + serialnumber + "<br>\n"
           "    Software version: v" + swversion + "<br>\n"
           "    <hr>\n"
-           "    <h3>Last 256 line of system log:</h3>\n"
+          "    <h3>Last 256 line of system log:</h3>\n"
           "    <table border=\"0\" cellpadding=\"3\" cellspacing=\"0\">\n";
 
         for (int i = 0; i < 256; i++)
           if (syslog[i] > 0)
-            line = line + "      <tr><td>" + msg[syslog[i]] + "</td></tr>\n";
+            line = line + "      <tr><td><pre>" + String(i) + "</pre></td><td><pre>" + msg[syslog[i]] + "</pre></td></tr>\n";
         line = line +
                "    </table>\n"
                "    <br>\n"
@@ -349,8 +348,8 @@ void setup(void)
     if (checkipaddress() == 1)
       if (checkuid() == 1)
       {
-        Serial.println(msg[53]);
-        writesyslog(53);
+        Serial.println(msg[52]);
+        writesyslog(52);
         autoopmode = true;
         server.send(200, textplain, msg[27]);
       }
@@ -361,8 +360,8 @@ void setup(void)
     if (checkipaddress() == 1)
       if (checkuid() == 1)
       {
-        Serial.println(msg[54]);
-        writesyslog(54);
+        Serial.println(msg[53]);
+        writesyslog(53);
         autoopmode = false;
         server.send(200, textplain, msg[27]);
       }
@@ -475,14 +474,14 @@ void setup(void)
   {
     if (checkipaddress() == 1)
       if (checkuid() == 1)
-        if (autoopmode == 0)
+        if (autoopmode == false)
         {
+          Serial.println(msg[49]);
           Serial.println(msg[50]);
           Serial.println(msg[51]);
-          Serial.println(msg[52]);
+          writesyslog(49);
           writesyslog(50);
           writesyslog(51);
-          writesyslog(52);
           green = 0;
           red = 0;
           yellow = 0;
@@ -494,78 +493,84 @@ void setup(void)
   {
     if (checkipaddress() == 1)
       if (checkuid() == 1)
-        if (autoopmode == 0)
+        if (autoopmode == false)
         {
-          Serial.println(msg[50]);
-          writesyslog(50);
+          Serial.println(msg[49]);
+          writesyslog(49);
           green = 0;
           server.send(200, textplain, msg[27]);
-        }
+        } else
+          server.send(200, textplain, msg[55]);
   });
   // set status of green LED to on in manual operation mode
   server.on("/set/greenled/on", []()
   {
     if (checkipaddress() == 1)
       if (checkuid() == 1)
-        if (autoopmode == 0)
+        if (autoopmode == false)
         {
-          Serial.println(msg[50]);
-          writesyslog(50);
+          Serial.println(msg[49]);
+          writesyslog(49);
           green = 1;
           server.send(200, textplain, msg[27]);
-        }
+        } else
+          server.send(200, textplain, msg[55]);
   });
   // set status of yellow LED to off in manual operation mode
   server.on("/set/yellowled/off", []()
   {
     if (checkipaddress() == 1)
       if (checkuid() == 1)
-        if (autoopmode == 0)
+        if (autoopmode == false)
         {
-          Serial.println(msg[51]);
-          writesyslog(51);
+          Serial.println(msg[50]);
+          writesyslog(50);
           yellow = 0;
           server.send(200, textplain, msg[27]);
-        }
+        } else
+          server.send(200, textplain, msg[55]);
   });
   // set status of yellow LED to on in manual operation mode
   server.on("/set/yellowled/on", []()
   {
     if (checkipaddress() == 1)
       if (checkuid() == 1)
-        if (autoopmode == 0)
+        if (autoopmode == false)
         {
-          Serial.println(msg[51]);
-          writesyslog(51);
+          Serial.println(msg[50]);
+          writesyslog(50);
           yellow = 1;
           server.send(200, textplain, msg[27]);
-        }
+        } else
+          server.send(200, textplain, msg[55]);
   });
   // set status of red LED to off in manual operation mode
   server.on("/set/redled/off", []()
   {
     if (checkipaddress() == 1)
       if (checkuid() == 1)
-        if (autoopmode == 0)
+        if (autoopmode == false)
         {
-          Serial.println(msg[52]);
-          writesyslog(52);
+          Serial.println(msg[51]);
+          writesyslog(51);
           red = 0;
           server.send(200, textplain, msg[27]);
-        }
+        } else
+          server.send(200, textplain, msg[55]);
   });
   // set status of red LED to on in manual operation mode
   server.on("/set/redled/on", []()
   {
     if (checkipaddress() == 1)
       if (checkuid() == 1)
-        if (autoopmode == 0)
+        if (autoopmode == false)
         {
-          Serial.println(msg[52]);
-          writesyslog(52);
+          Serial.println(msg[51]);
+          writesyslog(51);
           red = 1;
           server.send(200, textplain, msg[27]);
-        }
+        } else
+          server.send(200, textplain, msg[55]);
   });
   server.begin();
   Serial.println(msg[8]);
@@ -592,7 +597,6 @@ void loop(void)
     Serial.println(msg[42]);
     Serial.println(msg[45]);
     writesyslog(42);
-    writesyslog(45);
     getunwantedgaslevel();
     gettemphum();
     leds();
@@ -684,11 +688,11 @@ int setlimitvalues()
 // set status of all LEDs in automatic operation mode
 void leds()
 {
-  if (autoopmode)
+  if (autoopmode == true)
   {
-    int green = 0;
-    int yellow = 0;
-    int red = 0;
+    green = 0;
+    yellow = 0;
+    red = 0;
     if ((unwantedgaslevel != 999) && (humidity != 999) && (temperature != 999))
     {
       if ((int)unwantedgaslevel < g) green = 1;
@@ -762,10 +766,11 @@ void gettemphum()
 void writeclientipaddress()
 {
   digitalWrite(prt_led_blue, HIGH);
-  delay(200);
+  delay(100);
   digitalWrite(prt_led_blue, LOW);
   clientaddress = server.client().remoteIP().toString();
   Serial.println(msg[13] + clientaddress + ".");
+  writesyslog(56);
 }
 
 // check IP address of client
@@ -818,17 +823,20 @@ void beep(int num)
 // write a line to system log
 void writesyslog(int msgnum)
 {
-  if (syslog[255] != 0)
+  if (syslog[255] == 0)
   {
     for (int i = 0; i < 256; i++)
-      syslog[i - 1] = syslog[i];
-    syslog[255] = 0;
-  }
-  for (int i = 0; i < 256; i++)
-    if (syslog[i] = 0)
     {
-      syslog[i] = msgnum;
-      Serial.println("Added " + msg[msgnum]+ " to " + String(i));
-      break;
+      if (syslog[i] == 0)
+      {
+        syslog[i] = msgnum;
+        break;
+      }
     }
+  } else
+  {
+    for (int i = 1; i < 256; i++)
+      syslog[i - 1] = syslog[i];
+    syslog[255] = msgnum;
+  }
 }
