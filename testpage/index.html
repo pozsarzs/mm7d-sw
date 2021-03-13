@@ -1,13 +1,143 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html>
   <head>
-    <title>MM7D * Air quality measuring device | Controller test page</title>
+    <title>MM7D * Air quality measuring device v0.3 | test page</title>
   </head>
-  <frameset rows= "95%,5%">
-    <frame name="body" src="body.html"/>
-    <frame name="bottom" src="bottom.html"/>
-    <noframes>
-      <body>Your browser does not support frames.</body>
-    </noframes>
-  </frameset>
+  <body bgcolor="#e2f4fd" font style="font-family:'sans'">
+    <script type="text/javascript">
+      function OpenPage1()
+      {
+        var ipaddress = document.getElementById('ipaddress').value;
+        var uid = document.getElementById('uid').value;
+        var page = document.querySelector('input[name = "page"]:checked').value;
+        window.open ("http://" + ipaddress + page + "?uid=" + uid, target='bottom');
+      }
+      function OpenPage2()
+      {
+        var ipaddress = document.getElementById('ipaddress').value;
+        var uid = document.getElementById('uid').value;
+        var g = document.getElementById('g').value;
+        var h1 = document.getElementById('h1').value;
+        var h2 = document.getElementById('h2').value;
+        var h3 = document.getElementById('h3').value;
+        var h4 = document.getElementById('h4').value;
+        var t1 = document.getElementById('t1').value;
+        var t2 = document.getElementById('t2').value;
+        var t3 = document.getElementById('t3').value;
+        var t4 = document.getElementById('t4').value;
+        var page = document.querySelector('input[name = "page"]:checked').value;
+        window.open ("http://" + ipaddress + page + "?uid=" + uid + "&g=" + g + "&h1=" + h1 + "&h2=" + h2 + "&h3=" + h3 + "&h4=" + h4 + "&t1=" + t1 + "&t2=" + t2 + "&t3=" + t3 + "&t4=" + t4, target='bottom');
+      }
+    </script>
+    <fieldset>
+      <legend>&nbsp;Controller&nbsp;</legend>
+      <label for="ipaddress">IP address of controller:</label><br>
+      <input type="text" id="ipaddress" /><br>
+      <label for="uid">UID:</label><br>
+      <input type="text" id="uid" /><br>
+    </fieldset>
+    <br>
+    <fieldset>
+      <legend>&nbsp;Information pages&nbsp;</legend>
+      <input type="radio" id="page0" name="page" value="">
+      <label for="page0">Open help page of controller</label><br>
+      <input type="radio" id="page1" name="page" value="/version">
+      <label for="page1">Show device information</label><br>
+      <input type="radio" id="page2" name="page" value="/log">
+      <label for="page2">Show system log</label><br>
+      <br>
+      <input type="submit" value="Submit" onclick="OpenPage1();" />
+    </fieldset>
+    <br>
+    <fieldset>
+      <legend>&nbsp;Set operation mode&nbsp;</legend>
+      <input type="radio" id="page3" name="page" value="/mode/auto">
+      <label for="page3">Set automatic mode</label><br>
+      <input type="radio" id="page4" name="page" value="/mode/manual">
+      <label for="page4">Set manual mode</label><br>
+      <br>
+      <input type="submit" value="Submit" onclick="OpenPage1();" />
+    </fieldset>
+    <br>
+    <fieldset>
+      <legend>&nbsp;Get data&nbsp;</legend>
+      <input type="radio" id="page5" name="page" value="/get/all">
+        <label for="page5">Get all measured data</label><br>
+      <input type="radio" id="page6" name="page" value="/get/humidity">
+        <label for="page6">Get relative humidity in %</label><br>
+      <input type="radio" id="page7" name="page" value="/get/temperature">
+        <label for="page7">Get temperature in &deg;C</label><br>
+      <input type="radio" id="page8" name="page" value="/get/unwantedgaslevel">
+        <label for="page8">Get relative level of unwanted gases in %</label><br>
+      <input type="radio" id="page9" name="page" value="/get/greenled">
+        <label for="page9">Get status of green LED</label><br>
+      <input type="radio" id="page10" name="page" value="/get/yellowled">
+        <label for="page10">Get status of yellow LED</label><br>
+      <input type="radio" id="page11" name="page" value="/get/redled">
+        <label for="page11">Get status of red LED</label><br>
+      <br>
+      <input type="submit" value="Submit" onclick="OpenPage1();" />
+    </fieldset>
+    <br>
+    <fieldset>
+      <legend>&nbsp;Automatic operation&nbsp;</legend>
+      Limit values:
+      <table border="0" cellpadding="2">
+        <tbody>
+          <tr>
+            <td><label for="g">Maximal gas level in %:</label></td><td><input type="text" id="g" /></td>
+            <td>&nbsp;</td><td>&nbsp;</td>
+          </tr>
+          <tr>
+            <td><label for="h1">Minimal humidity in %:</label></td><td><input type="text" id="h1" /></td>
+            <td><label for="t1">&nbsp;Minimal temperature in &deg;C:</label></td><td><input type="text" id="t1" /></td>
+          </tr>
+          <tr>
+            <td><label for="h2">Humidifier on humidity in %:</label></td><td><input type="text" id="h2" /></td>
+            <td><label for="t2">&nbsp;Heater on temperature in &deg;C:</label></td><td><input type="text" id="t2" /></td>
+          </tr>
+          <tr>
+            <td><label for="h3">Humidifier off humidity in %:</label></td><td><input type="text" id="h3" /></td>
+            <td><label for="t3">&nbsp;Heater off temperature in &deg;C:</label></td><td><input type="text" id="t3" /></td>
+          </tr>
+          <tr>
+            <td><label for="h4">Maximal humidity in %:</label></td><td><input type="text" id="h4" /></td>
+            <td><label for="t4">&nbsp;Maximal temperature in &deg;C:</label></td><td><input type="text" id="t4" /></td>
+          </tr>
+        </tbody>
+      </table>
+      <input type="radio" id="page12" name="page" value="/operation">
+      <label for="page12">Get all measured data and set limit values</label><br>
+      <br>
+      <input type="submit" value="Submit" onclick="OpenPage2();" />
+    </fieldset>
+    <br>
+    <fieldset>
+      <legend>&nbsp;Manual operation&nbsp;</legend>
+      <input type="radio" id="page13" name="page" value="/set/all/off">
+        <label for="page13">Switch off all LEDs</label><br>
+      <input type="radio" id="page14" name="page" value="/set/greenled/off">
+        <label for="page14">Switch off green LED</label><br>
+      <input type="radio" id="page15" name="page" value="/set/greenled/on">
+        <label for="page15">Switch on green LED</label><br>
+      <input type="radio" id="page16" name="page" value="/set/yellowled/off">
+        <label for="page16">Switch off yellow LED</label><br>
+      <input type="radio" id="page17" name="page" value="/set/yellowled/on">
+        <label for="page17">Switch on yellow LED</label><br>
+      <input type="radio" id="page18" name="page" value="/set/redled/off">
+        <label for="page18">Switch off red LED</label><br>
+      <input type="radio" id="page19" name="page" value="/set/redled/on">
+        <label for="page19">Switch on red LED</label><br>
+      <br>
+      <input type="submit" value="Submit" onclick="OpenPage1();" />
+    </fieldset>
+    <center>
+      <br>
+      Copyright (C) 2020-2021 <a href="pozsar.zsolt@szerafingomba.hu">Pozsár Zsolt</a> *
+      <a href="http://www.szerafingomba.hu/softwares/">Homepage</a> * 
+      <a href="https://github.com/pozsarzs/mm7d-sw">GitHub</a>
+      <br>
+      <br>
+    </center>
+  </body>
 </html>

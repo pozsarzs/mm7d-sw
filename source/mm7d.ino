@@ -97,8 +97,8 @@ String msg[60]                  =
   "  device MAC address: ",
   "  Page not found!",
   "Serial number of hardware: ",
-  "  get homepage",
-  "  get version data",
+  "  get help page",
+  "  get device information",
   "  get all measured data",
   "  get relative unwanted gas level",
   "  get relative humidity",
@@ -114,7 +114,7 @@ String msg[60]                  =
   "* E05: Page not found!",
   "  get status of green LED",
   "  get status of yellow LED",
-  "  get status of red LED"
+  "  get status of red LED",
   "  set status of green LED",
   "  set status of yellow LED",
   "  set status of red LED",
@@ -310,8 +310,8 @@ void setup(void)
     if (checkipaddress() == 1)
       if (checkuid() == 1)
       {
-        Serial.println(msg[54]);
-        writesyslog(54);
+        Serial.println(msg[55]);
+        writesyslog(55);
         line =
           "<html>\n"
           "  <head>\n"
@@ -348,8 +348,8 @@ void setup(void)
     if (checkipaddress() == 1)
       if (checkuid() == 1)
       {
-        Serial.println(msg[52]);
-        writesyslog(52);
+        Serial.println(msg[53]);
+        writesyslog(53);
         autoopmode = true;
         server.send(200, textplain, msg[27]);
       }
@@ -360,8 +360,8 @@ void setup(void)
     if (checkipaddress() == 1)
       if (checkuid() == 1)
       {
-        Serial.println(msg[53]);
-        writesyslog(53);
+        Serial.println(msg[54]);
+        writesyslog(54);
         autoopmode = false;
         server.send(200, textplain, msg[27]);
       }
@@ -476,12 +476,12 @@ void setup(void)
       if (checkuid() == 1)
         if (autoopmode == false)
         {
-          Serial.println(msg[49]);
           Serial.println(msg[50]);
           Serial.println(msg[51]);
-          writesyslog(49);
+          Serial.println(msg[52]);
           writesyslog(50);
           writesyslog(51);
+          writesyslog(52);
           green = 0;
           red = 0;
           yellow = 0;
@@ -495,12 +495,12 @@ void setup(void)
       if (checkuid() == 1)
         if (autoopmode == false)
         {
-          Serial.println(msg[49]);
-          writesyslog(49);
+          Serial.println(msg[50]);
+          writesyslog(50);
           green = 0;
           server.send(200, textplain, msg[27]);
         } else
-          server.send(200, textplain, msg[55]);
+          server.send(200, textplain, msg[56]);
   });
   // set status of green LED to on in manual operation mode
   server.on("/set/greenled/on", []()
@@ -509,12 +509,12 @@ void setup(void)
       if (checkuid() == 1)
         if (autoopmode == false)
         {
-          Serial.println(msg[49]);
-          writesyslog(49);
+          Serial.println(msg[50]);
+          writesyslog(50);
           green = 1;
           server.send(200, textplain, msg[27]);
         } else
-          server.send(200, textplain, msg[55]);
+          server.send(200, textplain, msg[56]);
   });
   // set status of yellow LED to off in manual operation mode
   server.on("/set/yellowled/off", []()
@@ -523,12 +523,12 @@ void setup(void)
       if (checkuid() == 1)
         if (autoopmode == false)
         {
-          Serial.println(msg[50]);
-          writesyslog(50);
+          Serial.println(msg[51]);
+          writesyslog(51);
           yellow = 0;
           server.send(200, textplain, msg[27]);
         } else
-          server.send(200, textplain, msg[55]);
+          server.send(200, textplain, msg[56]);
   });
   // set status of yellow LED to on in manual operation mode
   server.on("/set/yellowled/on", []()
@@ -537,12 +537,12 @@ void setup(void)
       if (checkuid() == 1)
         if (autoopmode == false)
         {
-          Serial.println(msg[50]);
-          writesyslog(50);
+          Serial.println(msg[51]);
+          writesyslog(51);
           yellow = 1;
           server.send(200, textplain, msg[27]);
         } else
-          server.send(200, textplain, msg[55]);
+          server.send(200, textplain, msg[56]);
   });
   // set status of red LED to off in manual operation mode
   server.on("/set/redled/off", []()
@@ -551,12 +551,12 @@ void setup(void)
       if (checkuid() == 1)
         if (autoopmode == false)
         {
-          Serial.println(msg[51]);
-          writesyslog(51);
+          Serial.println(msg[52]);
+          writesyslog(52);
           red = 0;
           server.send(200, textplain, msg[27]);
         } else
-          server.send(200, textplain, msg[55]);
+          server.send(200, textplain, msg[56]);
   });
   // set status of red LED to on in manual operation mode
   server.on("/set/redled/on", []()
@@ -565,12 +565,12 @@ void setup(void)
       if (checkuid() == 1)
         if (autoopmode == false)
         {
-          Serial.println(msg[51]);
-          writesyslog(51);
+          Serial.println(msg[52]);
+          writesyslog(52);
           red = 1;
           server.send(200, textplain, msg[27]);
         } else
-          server.send(200, textplain, msg[55]);
+          server.send(200, textplain, msg[56]);
   });
   server.begin();
   Serial.println(msg[8]);

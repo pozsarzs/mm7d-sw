@@ -1,3 +1,13 @@
+mm7d (0.3) unstable; urgency=low
+
+  * New help page.
+  * Added system log page.
+  * Added operation mode set pages.
+  * Added LED status pages.
+  * New test page in testpage directory.
+
+ -- Pozsar Zsolt <pozsar.zsolt@szerafingomba.hu>  Sat, 13 Mar 2021 07:18:13
+
 mm7d (0.2.1) unstable; urgency=low
 
   * Speeding up "server.on" functions

@@ -6,14 +6,15 @@ Operating program for MM7D device
   It is an internal software for air quality measuring device.
   This device can measure temperature and humidity of growing house air, and
 detect some unwanted gas (CO2, NH3, NOx, alcohol, benzene etc.) and smoke, and
-has got three different color status LED. The measured values can be queried
-and LEDs can be turn on and off via wireless network via HTTP.
+has got three different color status LED.
+  The device can be controlled via wireless network by HTTP.
 
 Requirements:
 
   Hardware: ESP8266 Huzzah Breakout microcontroller
   Software: Adafruit Unified Sensor library v1.1.4 by Adafruit Industries
             DHT sensor library v1.3.10 by Adafruit Industries
+            Arduino String Splitter Library v1.0.0 by Harsha Alva
 
 2. How to get installer package?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -21,7 +22,7 @@ a. Visit homepage (see later) to download package:
 
   architecture  operation system        filename
   --------------------------------------------------------
-  (all)         (source code)           mm7d-sw-0.2.1.tar.gz
+  (all)         (source code)           mm7d-sw-0.3.tar.gz
 
 b. Download from Github
 
