@@ -65,64 +65,66 @@ unsigned long prevtime3         = 0;
 // messages
 String msg[60]                  =
 {
-  "",
-  "MM7D * Air quality measuring device",
-  "Copyright (C) 2020-2021",
-  "pozsar.zsolt@szerafingomba.hu",
-  "http://www.szerafingomba.hu/equipments/",
-  "* Initializing GPIO ports...",
-  "* Initializing sensors...",
-  "* Connecting to wireless network",
-  "done.",
-  "  my IP address:      ",
-  "  subnet mask:        ",
-  "  gateway IP address: ",
-  "* Starting webserver...",
-  "* HTTP request received from: ",
-  "* E01: Failed to read CO2 sensor!",
-  "* E02: Failed to read T/RH sensor!",
-  "MM7D",
-  "Authentication error!",
-  "* E03: Authentication error!",
-  "Not allowed client IP address!",
-  "* E04: Not allowed client IP address!",
-  "  green",
-  "  red",
-  "  yellow",
-  " LED is switched ",
-  "on.",
-  "off.",
-  "Done.",
-  "Pozsar Zsolt",
-  "  device MAC address: ",
-  "  Page not found!",
-  "Serial number of hardware: ",
-  "  get help page",
-  "  get device information",
-  "  get all measured data",
-  "  get relative unwanted gas level",
-  "  get relative humidity",
-  "  get temperature",
-  "  get all measured data and set limit values",
-  "    gas level:\t\t",
-  "    humidity:\t\t",
-  "    temperature:\t",
-  "* Periodic measure.",
-  "  limit values:",
-  "  Not enough argument!",
-  "  measured data:",
-  "* E05: Page not found!",
-  "  get status of green LED",
-  "  get status of yellow LED",
-  "  get status of red LED",
-  "  set status of green LED",
-  "  set status of yellow LED",
-  "  set status of red LED",
-  "  set automatic operation mode",
-  "  set manual operation mode",
-  "  get system log",
-  "  cannot set status of LEDs in manual mode",
-  "* HTTP request received.",
+  /*  0 */  "",
+  /*  1 */  "MM7D * Air quality measuring device",
+  /*  2 */  "Copyright (C) 2020-2021",
+  /*  3 */  "pozsar.zsolt@szerafingomba.hu",
+  /*  4 */  "http://www.szerafingomba.hu/equipments/",
+  /*  5 */  "* Initializing GPIO ports...",
+  /*  6 */  "* Initializing sensors...",
+  /*  7 */  "* Connecting to wireless network",
+  /*  8 */  "done.",
+  /*  9 */  "  my IP address:      ",
+  /* 10 */  "  subnet mask:        ",
+  /* 11 */  "  gateway IP address: ",
+  /* 12 */  "* Starting webserver...",
+  /* 13 */  "* HTTP request received from: ",
+  /* 14 */  "* E01: Failed to read CO2 sensor!",
+  /* 15 */  "* E02: Failed to read T/RH sensor!",
+  /* 16 */  "MM7D",
+  /* 17 */  "Authentication error!",
+  /* 18 */  "* E03: Authentication error!",
+  /* 19 */  "Not allowed client IP address!",
+  /* 20 */  "* E04: Not allowed client IP address!",
+  /* 21 */  "  green",
+  /* 22 */  "  red",
+  /* 23 */  "  yellow",
+  /* 24 */  " LED is switched ",
+  /* 25 */  "on.",
+  /* 26 */  "off.",
+  /* 27 */  "Done.",
+  /* 28 */  "Pozsar Zsolt",
+  /* 29 */  "  device MAC address: ",
+  /* 30 */  "  Page not found!",
+  /* 31 */  "Serial number of hardware: ",
+  /* 32 */  "  get help page",
+  /* 33 */  "  get device information",
+  /* 34 */  "  get all measured data",
+  /* 35 */  "  get relative unwanted gas level",
+  /* 36 */  "  get relative humidity",
+  /* 37 */  "  get temperature",
+  /* 38 */  "  get all measured data and set limit values",
+  /* 39 */  "    gas level:\t\t",
+  /* 40 */  "    humidity:\t\t",
+  /* 41 */  "    temperature:\t",
+  /* 42 */  "* Periodic measure.",
+  /* 43 */  "  limit values:",
+  /* 44 */  "  Not enough argument!",
+  /* 45 */  "  measured data:",
+  /* 46 */  "* E05: Page not found!",
+  /* 47 */  "  get status of green LED",
+  /* 48 */  "  get status of yellow LED",
+  /* 49 */  "  get status of red LED",
+  /* 50 */  "  set status of green LED",
+  /* 51 */  "  set status of yellow LED",
+  /* 52 */  "  set status of red LED",
+  /* 53 */  "  set automatic operation mode",
+  /* 54 */  "  set manual operation mode",
+  /* 55 */  "  get system log",
+  /* 56 */  "  cannot set status of LEDs in manual mode",
+  /* 57 */  "* HTTP request received.",
+  /* 58 */  "  get operation mode",
+  /* 59 */  "  get summary",
 };
 
 DHT dht(prt_sensor1, TYP_SENSOR1, 11);
@@ -190,100 +192,132 @@ void setup(void)
     line =
       "<html>\n"
       "  <head>\n"
-      "    <title>" + msg[1] + "</title>\n"
+      "    <title>" + msg[1] + " | Help page</title>\n"
       "  </head>\n"
       "  <body bgcolor=\"#e2f4fd\" style=\"font-family:\'sans\'\">\n"
       "    <h2>" + msg[1] + "</h2>\n"
       "    <br>\n"
+      "    IP address: " + deviceipaddress + "<br>\n"
+      "    MAC address: " + devicemacaddress + "<br>\n"
       "    Hardware serial number: " + serialnumber + "<br>\n"
       "    Software version: v" + swversion + "<br>\n"
       "    <hr>\n"
       "    <h3>Pages:</h3>\n"
       "    <table border=\"1\" cellpadding=\"3\" cellspacing=\"0\">\n"
-      "      <tr><td colspan=\"2\" align=\"center\"><b>Information pages</b></td></tr>\n"
+      "      <tr><td colspan=\"3\" align=\"center\"><b>Information pages</b></td></tr>\n"
       "      <tr>\n"
       "        <td>http://" + deviceipaddress + "</td>\n"
       "        <td>This page</td>\n"
+      "        <td>" + texthtml + "</td>\n"
       "      </tr>\n"
       "      <tr>\n"
-      "        <td>http://" + deviceipaddress + "/version</td>\n"
-      "        <td>Device information</td>\n"
+      "        <td>http://" + deviceipaddress + "/summary?uid=abcdef</td>\n"
+      "        <td>Summary of status</td>\n"
+      "        <td>" + texthtml + "</td>\n"
       "      </tr>\n"
       "      <tr>\n"
       "        <td>http://" + deviceipaddress + "/log?uid=abcdef</td>\n"
       "        <td>System log</td>\n"
+      "        <td>" + texthtml + "</td>\n"
       "      </tr>\n"
-      "      <tr><td colspan=\"2\" align=\"center\"><b>Set operation mode</b></td>\n"
+      "      <tr>\n"
+      "        <td>http://" + deviceipaddress + "/version</td>\n"
+      "        <td>Device information</td>\n"
+      "        <td>" + textplain + "</td>\n"
+      "      </tr>\n"
+      "      <tr><td colspan=\"3\" align=\"center\"><b>Operation mode</b></td>\n"
+      "      <tr>\n"
+      "        <td>http://" + deviceipaddress + "/mode/?uid=abcdef</td>\n"
+      "        <td>Get operation mode</td>\n"
+      "        <td>" + textplain + "</td>\n"
+      "      </tr>\n"
       "      <tr>\n"
       "        <td>http://" + deviceipaddress + "/mode/auto?uid=abcdef</td>\n"
       "        <td>Set automatic mode</td>\n"
+      "        <td>" + textplain + "</td>\n"
       "      </tr>\n"
       "      <tr>\n"
       "        <td>http://" + deviceipaddress + "/mode/manual?uid=abcdef</td>\n"
       "        <td>Set manual mode</td>\n"
+      "        <td>" + textplain + "</td>\n"
       "      </tr>\n"
-      "      <tr><td colspan=\"2\" align=\"center\"><b>Get data</b></td></tr>\n"
+      "      <tr><td colspan=\"3\" align=\"center\"><b>Get data</b></td></tr>\n"
       "      <tr>\n"
       "        <td>http://" + deviceipaddress + "/get/all?uid=abcdef</td>\n"
       "        <td>Get all measured data</td>\n"
+      "        <td>" + textplain + "</td>\n"
       "      </tr>\n"
       "      <tr>\n"
       "        <td>http://" + deviceipaddress + "/get/humidity?uid=abcdef</td>\n"
       "        <td>Get relative humidity in %</td>\n"
+      "        <td>" + textplain + "</td>\n"
       "      </tr>\n"
       "      <tr>\n"
       "        <td>http://" + deviceipaddress + "/get/temperature?uid=abcdef</td>\n"
       "        <td>Get temperature in &deg;C</td>\n"
+      "        <td>" + textplain + "</td>\n"
       "      </tr>\n"
       "      <tr>\n"
       "        <td>http://" + deviceipaddress + "/get/unwantedgaslevel?uid=abcdef</td>\n"
       "        <td>Get relative level of unwanted gases in %</td>\n"
+      "        <td>" + textplain + "</td>\n"
       "      </tr>\n"
       "      <tr>\n"
       "        <td>http://" + deviceipaddress + "/get/greenled?uid=abcdef</td>\n"
       "        <td>Get status of green LED</td>\n"
+      "        <td>" + textplain + "</td>\n"
       "      </tr>\n"
       "      <tr>\n"
       "        <td>http://" + deviceipaddress + "/get/yellowled?uid=abcdef</td>\n"
       "        <td>Get status of yellow LED</td>\n"
+      "        <td>" + textplain + "</td>\n"
       "      </tr>\n"
       "      <tr>\n"
       "        <td>http://" + deviceipaddress + "/get/redled?uid=abcdef</td>\n"
       "        <td>Get status of red LED</td>\n"
+      "        <td>" + textplain + "</td>\n"
       "      </tr>\n"
-      "      <tr><td colspan=\"2\" align=\"center\"><b>Automatic operation</b></td></tr>\n"
+      "      <tr><td colspan=\"3\" align=\"center\"><b>Automatic operation</b></td></tr>\n"
       "      <tr>\n"
       "        <td>http://" + deviceipaddress + "/operation?uid=abcdef&g=20&h1=65&h2=70&h3=80&h4=85&t1=13&t2=150&t3=20&t4=22</td>\n"
       "        <td>Get all measured data and set limit values</td>\n"
+      "        <td>" + textplain + "</td>\n"
       "      </tr>\n"
-      "      <tr><td colspan=\"2\" align=\"center\"><b>Manual operation</b></td></tr>\n"
+      "      <tr><td colspan=\"3\" align=\"center\"><b>Manual operation</b></td></tr>\n"
       "      <tr>\n"
       "        <td>http://" + deviceipaddress + "/set/all/off?uid=abcdef</td>\n"
       "        <td>Switch off all LEDs</td>\n"
+      "        <td>" + textplain + "</td>\n"
       "      </tr>\n"
       "      <tr>\n"
       "        <td>http://" + deviceipaddress + "/set/greenled/off?uid=abcdef</td>\n"
       "        <td>Switch off green LED</td>\n"
+      "        <td>" + textplain + "</td>\n"
       "      </tr>\n"
       "      <tr>\n"
       "        <td>http://" + deviceipaddress + "/set/greenled/on?uid=abcdef</td>\n"
       "        <td>Switch on green LED</td>\n"
+      "        <td>" + textplain + "</td>\n"
       "      </tr>\n"
       "      <tr>\n"
       "        <td>http://" + deviceipaddress + "/set/yellowled/off?uid=abcdef</td>\n"
       "        <td>Switch off yellow LED</td>\n"
+      "        <td>" + textplain + "</td>\n"
       "      </tr>\n"
       "      <tr>\n"
       "        <td>http://" + deviceipaddress + "/set/yellowled/on?uid=abcdef</td>\n"
       "        <td>Switch on yellow LED</td>\n"
+      "        <td>" + textplain + "</td>\n"
       "      </tr>\n"
       "      <tr>\n"
       "        <td>http://" + deviceipaddress + "/set/redled/off?uid=abcdef</td>\n"
       "        <td>Switch off red LED</td>\n"
+      "        <td>" + textplain + "</td>\n"
       "      </tr>\n"
       "      <tr>\n"
       "        <td>http://" + deviceipaddress + "/set/redled/on?uid=abcdef</td>\n"
       "        <td>Switch on red LED</td>\n"
+      "        <td>" + textplain + "</td>\n"
       "      </tr>\n"
       "    </table>\n"
       "    <br>\n"
@@ -295,14 +329,94 @@ void setup(void)
     server.send(200, texthtml, line);
     delay(100);
   });
-  // write device information
-  server.on("/version", []()
+  // write summary of status
+  server.on("/summary", []()
   {
-    writeclientipaddress();
-    Serial.println(msg[33]);
-    writesyslog(33);
-    line = msg[16] + "\n" + swversion + "\n" + serialnumber;
-    server.send(200, textplain, line);
+    if (checkipaddress() == 1)
+      if (checkuid() == 1)
+      {
+        Serial.println(msg[59]);
+        writesyslog(59);
+        line =
+          "<html>\n"
+          "  <head>\n"
+          "    <title>" + msg[1] + " | Summary of status</title>\n"
+          "    <meta http-equiv=\"refresh\" content=\"60\">\n"
+          "  </head>\n"
+          "  <body bgcolor=\"#e2f4fd\" style=\"font-family:\'sans\'\">\n"
+          "    <h2>" + msg[1] + "</h2>\n"
+          "    <br>\n"
+          "    IP address: " + deviceipaddress + "<br>\n"
+          "    MAC address: " + devicemacaddress + "<br>\n"
+          "    Hardware serial number: " + serialnumber + "<br>\n"
+          "    Software version: v" + swversion + "<br>\n"
+          "    <hr>\n"
+          "    <h3>Summary of status:</h3>\n"
+          "    <table border=\"1\" cellpadding=\"3\" cellspacing=\"0\">\n"
+          "      <tr><td colspan=\"3\" align=\"center\"><b>Operation</b></td></tr>\n"
+          "      <tr>\n"
+          "        <td>Mode:</td>\n"
+          "        <td>";
+        if (autoopmode == false) line = line + "manual"; else line = line + "automatic";
+        line = line +
+               "        </td>\n"
+               "      </tr>\n"
+               "      <tr>\n"
+               "        <td>Temperature limit values:</td>\n"
+               "        <td>" + String((int)t1) + " &deg;C, " + String((int)t2) + " &deg;C, " + String((int)t3) + " &deg;C, " + String((int)t4) + " &deg;C</td>\n"
+               "      </tr>\n"
+               "      <tr>\n"
+               "        <td>Humidity limit values:</td>\n"
+               "        <td>" + String((int)h1) + "%, " + String((int)h2) + " %, " + String((int)h3) + "%,&nbsp; " + String((int)h4) + "%</td>\n"
+               "      </tr>\n"
+               "      <tr>\n"
+               "        <td>Gas level limit value:</td>\n"
+               "        <td>" + String((int)g) + "%</td>\n"
+               "      </tr>\n"
+               "      <tr><td colspan = \"3\" align=\"center\"><b>Measured value</b></td></tr>\n"
+               "      <tr>\n"
+               "        <td>Temperature:</td>\n"
+               "        <td>" + String((int)temperature) + " &deg;C</td>\n"
+               "      </tr>\n"
+               "      <tr>\n"
+               "        <td>Relative humidity:</td>\n"
+               "        <td>" + String((int)humidity) + "%</td>\n"
+               "      </tr>\n"
+               "      <tr>\n"
+               "        <td>Relative gas level:</td>\n"
+               "        <td>" + String((int)unwantedgaslevel) + "%</td>\n"
+               "      </tr>\n"
+               "      <tr><td colspan=\"3\" align=\"center\"><b>Status LEDs</b></td></tr>\n"
+               "      <tr>\n"
+               "        <td>Green:</td>\n"
+               "        <td>";
+        if (green == 1) line = line + "ON"; else line = line + "OFF";
+        line = line +
+               "        </td>\n"
+               "      </tr>\n"
+               "      <tr>\n"
+               "        <td>Yellow:</td>\n"
+               "        <td>";
+        if (yellow == 1) line = line + "ON"; else line = line + "OFF";
+        line = line +
+               "        </td>\n"
+               "      </tr>\n"
+               "      <tr>\n"
+               "        <td>Red:</td>\n"
+               "        <td>";
+        if (red == 1) line = line + "ON"; else line = line + "OFF";
+        line = line +
+               "        </td>\n"
+               "      </tr>\n"
+               "    </table>\n"
+               "    <br>\n"
+               "    <hr>\n"
+               "    <center>" + msg[2] + " <a href=\"mailto:" + msg[3] + "\">" + msg[28] + "</a> - <a href=\"" + msg[4] + "\">Homepage</a><center>\n"
+               "    <br>\n"
+               "  </body>\n"
+               "</html>\n";
+        server.send(200, texthtml, line);
+      }
   });
   // write log
   server.on("/log", []()
@@ -315,17 +429,18 @@ void setup(void)
         line =
           "<html>\n"
           "  <head>\n"
-          "    <title>" + msg[1] + "</title>\n"
+          "    <title>" + msg[1] + " | System log</title>\n"
           "  </head>\n"
           "  <body bgcolor=\"#e2f4fd\" style=\"font-family:\'sans\'\">\n"
           "    <h2>" + msg[1] + "</h2>\n"
           "    <br>\n"
+          "    IP address: " + deviceipaddress + "<br>\n"
+          "    MAC address: " + devicemacaddress + "<br>\n"
           "    Hardware serial number: " + serialnumber + "<br>\n"
           "    Software version: v" + swversion + "<br>\n"
           "    <hr>\n"
           "    <h3>Last 256 line of system log:</h3>\n"
           "    <table border=\"0\" cellpadding=\"3\" cellspacing=\"0\">\n";
-
         for (int i = 0; i < 256; i++)
           if (syslog[i] > 0)
             line = line + "      <tr><td><pre>" + String(i) + "</pre></td><td><pre>" + msg[syslog[i]] + "</pre></td></tr>\n";
@@ -340,8 +455,29 @@ void setup(void)
         server.send(200, texthtml, line);
       }
   });
+  // write device information
+  server.on("/version", []()
+  {
+    writeclientipaddress();
+    Serial.println(msg[33]);
+    writesyslog(33);
+    line = msg[16] + "\n" + swversion + "\n" + serialnumber;
+    server.send(200, textplain, line);
+  });
 
   // Group #2: set operation mode (auto/manual)
+  // get operation mode
+  server.on("/mode", []()
+  {
+    if (checkipaddress() == 1)
+      if (checkuid() == 1)
+      {
+        Serial.println(msg[58]);
+        writesyslog(58);
+        line = String((int)autoopmode);
+        server.send(200, textplain, line);
+      }
+  });
   // set automatic operation mode
   server.on("/mode/auto", []()
   {
@@ -770,7 +906,7 @@ void writeclientipaddress()
   digitalWrite(prt_led_blue, LOW);
   clientaddress = server.client().remoteIP().toString();
   Serial.println(msg[13] + clientaddress + ".");
-  writesyslog(56);
+  writesyslog(57);
 }
 
 // check IP address of client

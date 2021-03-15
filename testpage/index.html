@@ -1,7 +1,7 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html>
   <head>
-    <title>MM7D * Air quality measuring device v0.3 | test page</title>
+    <title>MM7D * Air quality measuring device | Test page</title>
   </head>
   <body bgcolor="#e2f4fd" font style="font-family:'sans'">
     <script type="text/javascript">
@@ -40,41 +40,45 @@
     <fieldset>
       <legend>&nbsp;Information pages&nbsp;</legend>
       <input type="radio" id="page0" name="page" value="">
-      <label for="page0">Open help page of controller</label><br>
-      <input type="radio" id="page1" name="page" value="/version">
-      <label for="page1">Show device information</label><br>
+      <label for="page0">Show help page</label><br>
+      <input type="radio" id="page1" name="page" value="/summary">
+      <label for="page1">Show summary of status</label><br>
       <input type="radio" id="page2" name="page" value="/log">
       <label for="page2">Show system log</label><br>
+      <input type="radio" id="page3" name="page" value="/version">
+      <label for="page3">Show device information</label><br>
       <br>
       <input type="submit" value="Submit" onclick="OpenPage1();" />
     </fieldset>
     <br>
     <fieldset>
-      <legend>&nbsp;Set operation mode&nbsp;</legend>
-      <input type="radio" id="page3" name="page" value="/mode/auto">
-      <label for="page3">Set automatic mode</label><br>
-      <input type="radio" id="page4" name="page" value="/mode/manual">
-      <label for="page4">Set manual mode</label><br>
+      <legend>&nbsp;Operation mode&nbsp;</legend>
+      <input type="radio" id="page4" name="page" value="/mode">
+      <label for="page4">Get operation mode</label><br>
+      <input type="radio" id="page5" name="page" value="/mode/auto">
+      <label for="page5">Set automatic mode</label><br>
+      <input type="radio" id="page6" name="page" value="/mode/manual">
+      <label for="page6">Set manual mode</label><br>
       <br>
       <input type="submit" value="Submit" onclick="OpenPage1();" />
     </fieldset>
     <br>
     <fieldset>
       <legend>&nbsp;Get data&nbsp;</legend>
-      <input type="radio" id="page5" name="page" value="/get/all">
-        <label for="page5">Get all measured data</label><br>
-      <input type="radio" id="page6" name="page" value="/get/humidity">
-        <label for="page6">Get relative humidity in %</label><br>
-      <input type="radio" id="page7" name="page" value="/get/temperature">
-        <label for="page7">Get temperature in &deg;C</label><br>
-      <input type="radio" id="page8" name="page" value="/get/unwantedgaslevel">
-        <label for="page8">Get relative level of unwanted gases in %</label><br>
-      <input type="radio" id="page9" name="page" value="/get/greenled">
-        <label for="page9">Get status of green LED</label><br>
-      <input type="radio" id="page10" name="page" value="/get/yellowled">
-        <label for="page10">Get status of yellow LED</label><br>
-      <input type="radio" id="page11" name="page" value="/get/redled">
-        <label for="page11">Get status of red LED</label><br>
+      <input type="radio" id="page7" name="page" value="/get/all">
+        <label for="page7">Get all measured data</label><br>
+      <input type="radio" id="page8" name="page" value="/get/humidity">
+        <label for="page8">Get relative humidity in %</label><br>
+      <input type="radio" id="page9" name="page" value="/get/temperature">
+        <label for="page9">Get temperature in &deg;C</label><br>
+      <input type="radio" id="page10" name="page" value="/get/unwantedgaslevel">
+        <label for="page10">Get relative level of unwanted gases in %</label><br>
+      <input type="radio" id="page11" name="page" value="/get/greenled">
+        <label for="page11">Get status of green LED</label><br>
+      <input type="radio" id="page12" name="page" value="/get/yellowled">
+        <label for="page12">Get status of yellow LED</label><br>
+      <input type="radio" id="page13" name="page" value="/get/redled">
+        <label for="page13">Get status of red LED</label><br>
       <br>
       <input type="submit" value="Submit" onclick="OpenPage1();" />
     </fieldset>
@@ -106,28 +110,28 @@
           </tr>
         </tbody>
       </table>
-      <input type="radio" id="page12" name="page" value="/operation">
-      <label for="page12">Get all measured data and set limit values</label><br>
+      <input type="radio" id="page14" name="page" value="/operation">
+      <label for="page14">Get all measured data and set limit values</label><br>
       <br>
       <input type="submit" value="Submit" onclick="OpenPage2();" />
     </fieldset>
     <br>
     <fieldset>
       <legend>&nbsp;Manual operation&nbsp;</legend>
-      <input type="radio" id="page13" name="page" value="/set/all/off">
-        <label for="page13">Switch off all LEDs</label><br>
-      <input type="radio" id="page14" name="page" value="/set/greenled/off">
-        <label for="page14">Switch off green LED</label><br>
-      <input type="radio" id="page15" name="page" value="/set/greenled/on">
-        <label for="page15">Switch on green LED</label><br>
-      <input type="radio" id="page16" name="page" value="/set/yellowled/off">
-        <label for="page16">Switch off yellow LED</label><br>
-      <input type="radio" id="page17" name="page" value="/set/yellowled/on">
-        <label for="page17">Switch on yellow LED</label><br>
-      <input type="radio" id="page18" name="page" value="/set/redled/off">
-        <label for="page18">Switch off red LED</label><br>
-      <input type="radio" id="page19" name="page" value="/set/redled/on">
-        <label for="page19">Switch on red LED</label><br>
+      <input type="radio" id="page15" name="page" value="/set/all/off">
+        <label for="page15">Switch off all LEDs</label><br>
+      <input type="radio" id="page16" name="page" value="/set/greenled/off">
+        <label for="page16">Switch off green LED</label><br>
+      <input type="radio" id="page17" name="page" value="/set/greenled/on">
+        <label for="page17">Switch on green LED</label><br>
+      <input type="radio" id="page18" name="page" value="/set/yellowled/off">
+        <label for="page18">Switch off yellow LED</label><br>
+      <input type="radio" id="page19" name="page" value="/set/yellowled/on">
+        <label for="page19">Switch on yellow LED</label><br>
+      <input type="radio" id="page20" name="page" value="/set/redled/off">
+        <label for="page20">Switch off red LED</label><br>
+      <input type="radio" id="page21" name="page" value="/set/redled/on">
+        <label for="page21">Switch on red LED</label><br>
       <br>
       <input type="submit" value="Submit" onclick="OpenPage1();" />
     </fieldset>

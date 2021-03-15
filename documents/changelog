@@ -2,8 +2,9 @@ mm7d (0.3) unstable; urgency=low
 
   * New help page.
   * Added system log page.
-  * Added operation mode set pages.
-  * Added LED status pages.
+  * Added status page.
+  * Added operation mode get/set pages.
+  * Added LED status get pages.
   * New test page in testpage directory.
 
  -- Pozsar Zsolt <pozsar.zsolt@szerafingomba.hu>  Sat, 13 Mar 2021 07:18:13
