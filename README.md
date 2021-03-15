@@ -16,5 +16,5 @@ GitHub: <https://github.com/pozsarzs/mm7d-sw>
 **External libraries in package**
 
  - Adafruit Unified Sensor library v1.1.4 by Adafruit Industries
- - DHT sensor library v1.3.10 by Adafruit Industries
  - Arduino String Splitter Library v1.0.0 by Harsha Alva
+ - DHT sensor library v1.3.10 by Adafruit Industries
