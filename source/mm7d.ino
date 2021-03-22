@@ -51,7 +51,7 @@ int           adcvalue          = 0;
 int           g;
 int           green             = 0;
 int           h1, h2, h3, h4;
-int           syslog[256]       = {};
+int           syslog[64]       = {};
 int           red               = 0;
 int           t1, t2, t3, t4;
 int           yellow            = 0;
@@ -367,7 +367,7 @@ void setup(void)
                "      </tr>\n"
                "      <tr>\n"
                "        <td>Humidity limit values:</td>\n"
-               "        <td>" + String((int)h1) + "%, " + String((int)h2) + " %, " + String((int)h3) + "%,&nbsp; " + String((int)h4) + "%</td>\n"
+               "        <td>" + String((int)h1) + "%, " + String((int)h2) + " %, " + String((int)h3) + "%, " + String((int)h4) + "%</td>\n"
                "      </tr>\n"
                "      <tr>\n"
                "        <td>Gas level limit value:</td>\n"
@@ -439,9 +439,9 @@ void setup(void)
           "    Hardware serial number: " + serialnumber + "<br>\n"
           "    Software version: v" + swversion + "<br>\n"
           "    <hr>\n"
-          "    <h3>Last 256 line of system log:</h3>\n"
+          "    <h3>Last 64 lines of system log:</h3>\n"
           "    <table border=\"0\" cellpadding=\"3\" cellspacing=\"0\">\n";
-        for (int i = 0; i < 256; i++)
+        for (int i = 0; i < 64; i++)
           if (syslog[i] > 0)
             line = line + "      <tr><td><pre>" + String(i) + "</pre></td><td><pre>" + msg[syslog[i]] + "</pre></td></tr>\n";
         line = line +
@@ -959,9 +959,9 @@ void beep(int num)
 // write a line to system log
 void writesyslog(int msgnum)
 {
-  if (syslog[255] == 0)
+  if (syslog[63] == 0)
   {
-    for (int i = 0; i < 256; i++)
+    for (int i = 0; i < 64; i++)
     {
       if (syslog[i] == 0)
       {
@@ -971,8 +971,8 @@ void writesyslog(int msgnum)
     }
   } else
   {
-    for (int i = 1; i < 256; i++)
+    for (int i = 1; i < 64; i++)
       syslog[i - 1] = syslog[i];
-    syslog[255] = msgnum;
+    syslog[63] = msgnum;
   }
 }
