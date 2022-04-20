@@ -10,8 +10,8 @@ GitHub: <https://github.com/pozsarzs/mm7d-sw>
  - version:            v0.3
  - language:           en
  - licence:            EUPL v1.1
- - user interface:     CUI via serial console and webpage
- - access:             HTTP
+ - user interface:     TUI, WUI
+ - remote access:      HTTP, serial console
 
 **External libraries in package**
 
