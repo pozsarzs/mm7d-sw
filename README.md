@@ -1,6 +1,6 @@
 **MM7D * Air quality measuring device**  
-Copyright (C) 2020-2021 Pozsár Zsolt <pozsar.zsolt@szerafingomba.hu>  
-Homepage: <http://www.szerafingomba.hu/softwares/>  
+Copyright (C) 2020-2021 Pozsár Zsolt <pozsarzs@gmail.com>  
+Homepage: <http://www.pozsarzs.hu>  
 GitHub: <https://github.com/pozsarzs/mm7d-sw>
 
 **Software**
