@@ -1,12 +1,12 @@
 // +---------------------------------------------------------------------------+
-// | MM7D v0.3 * Air quality measuring device                                  |
-// | Copyright (C) 2020-2021 Pozsár Zsolt <pozsar.zsolt@szerafingomba.hu>      |
+// | MM7D v0.4 * T/RH measuring device                                         |
+// | Copyright (C) 2023 Pozsár Zsolt <pozsarzs@gmail.com>                      |
 // | mm7d.ino                                                                  |
-// | Program for ESP8266 Huzzah Breakout                                       |
+// | Program for Adafruit Huzzah Breakout                                      |
 // +---------------------------------------------------------------------------+
 
 //   This program is free software: you can redistribute it and/or modify it
-// under the terms of the European Union Public License 1.1 version.
+// under the terms of the European Union Public License 1.2 version.
 //
 //   This program is distributed in the hope that it will be useful, but WITHOUT
 // ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
@@ -14,950 +14,160 @@
 
 #include <DHT.h>
 #include <ESP8266WebServer.h>
-#include <StringSplitter.h>
 #include <ESP8266WiFi.h>
 #include <WiFiClient.h>
+#include <ModbusIP_ESP8266.h>
+#include <ModbusRTU.h>
+#include <StringSplitter.h> // Note: Change MAX = 5 to MAX = 6 in StringSplitter.h.
 
-#define       TYP_SENSOR1 DHT11
+#define       TYP_SENSOR DHT11
 
 // settings
-const String  serialnumber      = "";  // serial number
-const char   *wifi_ssid         = "";  // SSID of Wi-Fi AP
-const char   *wifi_password     = "";  // password of Wi-Fi AP
-const String  uid               = "";  // user ID
-const String  allowedaddress    = "";  // client IP addresses with space delimiter
-// GPIO ports
-const int     prt_buzzer        = 14;
-const int     prt_led_blue      = 2;
-const int     prt_led_green     = 0;
-const int     prt_led_red       = 5;
-const int     prt_led_yellow    = 4;
-const int     prt_sensor1       = 12;
-// ADC input
-const int     prt_sensor2       = 0;
-// general constants
-const int     maxadcvalue       = 1024;
-const long    interval1         = 2000;
-const long    interval3         = 60000;
-const String  texthtml          = "text/html";
-const String  textplain         = "text/plain";
-const String  swversion         = "0.3";
-// general variables
-bool          autoopmode        = false;
-float         humidity;
-float         temperature;
-float         unwantedgaslevel;
-int           adcvalue          = 0;
-int           g;
-int           green             = 0;
-int           h1, h2, h3, h4;
-int           syslog[64]       = {};
-int           red               = 0;
-int           t1, t2, t3, t4;
-int           yellow            = 0;
-String        clientaddress;
-String        deviceipaddress;
-String        devicemacaddress;
-String        line;
-unsigned long prevtime1         = 0;
-unsigned long prevtime2         = 0;
-unsigned long prevtime3         = 0;
-// messages
-String msg[60]                  =
+const bool    SERIAL_CONSOLE    = true;           // enable/disable boot-time serial console
+const bool    HTTP              = true;           // enable/disable HTTP access
+const bool    MODBUS_TCP        = true;           // enable/disable Modbus/TCP access
+const int     COM_SPEED         = 9600;           // baudrate of the serial port
+const int     MB_UID            = 2;              // Modbus UID
+const char   *WIFI_SSID         = "";             // Wifi SSID
+const char   *WIFI_PASSWORD     = "";             // Wifi password
+
+// ports
+const int     PRT_AI            = 0;
+const int     PRT_DI_SENSOR     = 12;
+const int     PRT_DO_BUZZER     = 14;
+const int     PRT_DO_LEDBLUE    = 2;
+const int     PRT_DO_LEDGREEN   = 0;
+const int     PRT_DO_LEDRED     = 5;
+const int     PRT_DO_LEDYELLOW  = 4;
+
+// name of the Modbus registers
+const String  DI_NAME[3]        =
 {
-  /*  0 */  "",
-  /*  1 */  "MM7D * Air quality measuring device",
-  /*  2 */  "Copyright (C) 2020-2021",
-  /*  3 */  "pozsar.zsolt@szerafingomba.hu",
-  /*  4 */  "http://www.szerafingomba.hu/equipments/",
-  /*  5 */  "* Initializing GPIO ports...",
-  /*  6 */  "* Initializing sensors...",
-  /*  7 */  "* Connecting to wireless network",
-  /*  8 */  "done.",
-  /*  9 */  "  my IP address:      ",
-  /* 10 */  "  subnet mask:        ",
-  /* 11 */  "  gateway IP address: ",
-  /* 12 */  "* Starting webserver...",
-  /* 13 */  "* HTTP request received from: ",
-  /* 14 */  "* E01: Failed to read CO2 sensor!",
-  /* 15 */  "* E02: Failed to read T/RH sensor!",
-  /* 16 */  "MM7D",
-  /* 17 */  "Authentication error!",
-  /* 18 */  "* E03: Authentication error!",
-  /* 19 */  "Not allowed client IP address!",
-  /* 20 */  "* E04: Not allowed client IP address!",
-  /* 21 */  "  green",
-  /* 22 */  "  red",
-  /* 23 */  "  yellow",
-  /* 24 */  " LED is switched ",
-  /* 25 */  "on.",
-  /* 26 */  "off.",
-  /* 27 */  "Done.",
-  /* 28 */  "Pozsar Zsolt",
-  /* 29 */  "  device MAC address: ",
-  /* 30 */  "  Page not found!",
-  /* 31 */  "Serial number of hardware: ",
-  /* 32 */  "  get help page",
-  /* 33 */  "  get device information",
-  /* 34 */  "  get all measured data",
-  /* 35 */  "  get relative unwanted gas level",
-  /* 36 */  "  get relative humidity",
-  /* 37 */  "  get temperature",
-  /* 38 */  "  get all measured data and set limit values",
-  /* 39 */  "    gas level:\t\t",
-  /* 40 */  "    humidity:\t\t",
-  /* 41 */  "    temperature:\t",
-  /* 42 */  "* Periodic measure.",
-  /* 43 */  "  limit values:",
-  /* 44 */  "  Not enough argument!",
-  /* 45 */  "  measured data:",
-  /* 46 */  "* E05: Page not found!",
-  /* 47 */  "  get status of green LED",
-  /* 48 */  "  get status of yellow LED",
-  /* 49 */  "  get status of red LED",
-  /* 50 */  "  set status of green LED",
-  /* 51 */  "  set status of yellow LED",
-  /* 52 */  "  set status of red LED",
-  /* 53 */  "  set automatic operation mode",
-  /* 54 */  "  set manual operation mode",
-  /* 55 */  "  get system log",
-  /* 56 */  "  cannot set status of LEDs in manual mode",
-  /* 57 */  "* HTTP request received.",
-  /* 58 */  "  get operation mode",
-  /* 59 */  "  get summary",
+  /* 10001 */       "ledg",
+  /* 10002 */       "ledy",
+  /* 10003 */       "ledr"
+};
+const String  IR_NAME[3]        =
+{
+  /* 30001 */       "rhint",
+  /* 30002 */       "tint",
+  /* 30003 */       "vcc"
+};
+const String  HR_NAME[6]        =
+{
+  /* 40001-40008 */ "name",
+  /* 40009-40011 */ "version",
+  /* 40012-40017 */ "mac_address",
+  /* 40018-40021 */ "ip_address",
+  /* 40022       */ "modbus_uid",
+  /* 40023-40028 */ "com_speed"
 };
 
-DHT dht(prt_sensor1, TYP_SENSOR1, 11);
-ESP8266WebServer server(80);
+// other constants
+const int     MINVCC            = 4000; // mV
+const int     MAXVCC            = 6000; // mV
+const long    INTERVAL          = 10000; // ms
+const String  SWNAME            = "MM7D";
+const String  SWVERSION         = "0.4.0";
+const String  TEXTHTML          = "text/html";
+const String  TEXTPLAIN         = "text/plain";
+const String  DOCTYPEHTML       = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" \"http://www.w3.org/TR/html4/loose.dtd\">\n";
 
-// initializing function
-void setup(void)
+// other variables
+int           syslog[64]        = {};
+String        htmlheader;
+String        line;
+String        myipaddress       = "0.0.0.0";
+String        mymacaddress      = "00:00:00:00:00:00";
+unsigned long prevtime          = 0;
+
+// messages
+const String  MSG[62]           =
 {
-  // set serial port
-  Serial.begin(115200);
-  // write program information
-  Serial.println("");
-  Serial.println("");
-  Serial.println(msg[1] + " * v" + swversion );
-  Serial.println(msg[2] +  " " + msg[28] + " <" + msg[3] + ">");
-  Serial.println(msg[31] + serialnumber );
-  // initialize GPIO ports
-  writesyslog(5);
-  Serial.print(msg[5]);
-  pinMode(prt_buzzer, OUTPUT);
-  pinMode(prt_led_blue, OUTPUT);
-  pinMode(prt_led_green, OUTPUT);
-  pinMode(prt_led_red, OUTPUT);
-  pinMode(prt_led_yellow, OUTPUT);
-  digitalWrite(prt_led_blue, LOW);
-  digitalWrite(prt_led_green, LOW);
-  digitalWrite(prt_led_red, LOW);
-  digitalWrite(prt_led_yellow, LOW);
-  Serial.println(msg[8]);
-  // initialize sensors
-  writesyslog(6);
-  Serial.print(msg[6]);
-  dht.begin();
-  Serial.println(msg[8]);
-  // connect to wireless network
-  writesyslog(7);
-  Serial.print(msg[7]);
-  WiFi.begin(wifi_ssid, wifi_password);
-  while (WiFi.status() != WL_CONNECTED)
-  {
-    delay(300);
-    Serial.print(".");
-  }
-  Serial.println(msg[8]);
-  WiFi.setAutoReconnect(true);
-  WiFi.persistent(true);
-  deviceipaddress = WiFi.localIP().toString();
-  devicemacaddress = WiFi.macAddress();
-  Serial.println(msg[29] + devicemacaddress);
-  Serial.println(msg[9] + deviceipaddress);
-  Serial.println(msg[10] + WiFi.subnetMask().toString());
-  Serial.println(msg[11] + WiFi.gatewayIP().toString());
-  // start webserver
-  writesyslog(12);
-  Serial.print(msg[12]);
-  server.onNotFound(handleNotFound);
-
-  // Group #1: information pages
-  // write help page
-  server.on("/", []()
-  {
-    writeclientipaddress();
-    Serial.println(msg[32]);
-    writesyslog(32);
-    line =
-      "<html>\n"
-      "  <head>\n"
-      "    <title>" + msg[1] + " | Help page</title>\n"
-      "  </head>\n"
-      "  <body bgcolor=\"#e2f4fd\" style=\"font-family:\'sans\'\">\n"
-      "    <h2>" + msg[1] + "</h2>\n"
-      "    <br>\n"
-      "    IP address: " + deviceipaddress + "<br>\n"
-      "    MAC address: " + devicemacaddress + "<br>\n"
-      "    Hardware serial number: " + serialnumber + "<br>\n"
-      "    Software version: v" + swversion + "<br>\n"
-      "    <hr>\n"
-      "    <h3>Pages:</h3>\n"
-      "    <table border=\"1\" cellpadding=\"3\" cellspacing=\"0\">\n"
-      "      <tr><td colspan=\"3\" align=\"center\"><b>Information pages</b></td></tr>\n"
-      "      <tr>\n"
-      "        <td>http://" + deviceipaddress + "</td>\n"
-      "        <td>This page</td>\n"
-      "        <td>" + texthtml + "</td>\n"
-      "      </tr>\n"
-      "      <tr>\n"
-      "        <td>http://" + deviceipaddress + "/summary?uid=abcdef</td>\n"
-      "        <td>Summary of status</td>\n"
-      "        <td>" + texthtml + "</td>\n"
-      "      </tr>\n"
-      "      <tr>\n"
-      "        <td>http://" + deviceipaddress + "/log?uid=abcdef</td>\n"
-      "        <td>System log</td>\n"
-      "        <td>" + texthtml + "</td>\n"
-      "      </tr>\n"
-      "      <tr>\n"
-      "        <td>http://" + deviceipaddress + "/version</td>\n"
-      "        <td>Device information</td>\n"
-      "        <td>" + textplain + "</td>\n"
-      "      </tr>\n"
-      "      <tr><td colspan=\"3\" align=\"center\"><b>Operation mode</b></td>\n"
-      "      <tr>\n"
-      "        <td>http://" + deviceipaddress + "/mode/?uid=abcdef</td>\n"
-      "        <td>Get operation mode</td>\n"
-      "        <td>" + textplain + "</td>\n"
-      "      </tr>\n"
-      "      <tr>\n"
-      "        <td>http://" + deviceipaddress + "/mode/auto?uid=abcdef</td>\n"
-      "        <td>Set automatic mode</td>\n"
-      "        <td>" + textplain + "</td>\n"
-      "      </tr>\n"
-      "      <tr>\n"
-      "        <td>http://" + deviceipaddress + "/mode/manual?uid=abcdef</td>\n"
-      "        <td>Set manual mode</td>\n"
-      "        <td>" + textplain + "</td>\n"
-      "      </tr>\n"
-      "      <tr><td colspan=\"3\" align=\"center\"><b>Get data</b></td></tr>\n"
-      "      <tr>\n"
-      "        <td>http://" + deviceipaddress + "/get/all?uid=abcdef</td>\n"
-      "        <td>Get all measured data</td>\n"
-      "        <td>" + textplain + "</td>\n"
-      "      </tr>\n"
-      "      <tr>\n"
-      "        <td>http://" + deviceipaddress + "/get/humidity?uid=abcdef</td>\n"
-      "        <td>Get relative humidity in %</td>\n"
-      "        <td>" + textplain + "</td>\n"
-      "      </tr>\n"
-      "      <tr>\n"
-      "        <td>http://" + deviceipaddress + "/get/temperature?uid=abcdef</td>\n"
-      "        <td>Get temperature in &deg;C</td>\n"
-      "        <td>" + textplain + "</td>\n"
-      "      </tr>\n"
-      "      <tr>\n"
-      "        <td>http://" + deviceipaddress + "/get/unwantedgaslevel?uid=abcdef</td>\n"
-      "        <td>Get relative level of unwanted gases in %</td>\n"
-      "        <td>" + textplain + "</td>\n"
-      "      </tr>\n"
-      "      <tr>\n"
-      "        <td>http://" + deviceipaddress + "/get/greenled?uid=abcdef</td>\n"
-      "        <td>Get status of green LED</td>\n"
-      "        <td>" + textplain + "</td>\n"
-      "      </tr>\n"
-      "      <tr>\n"
-      "        <td>http://" + deviceipaddress + "/get/yellowled?uid=abcdef</td>\n"
-      "        <td>Get status of yellow LED</td>\n"
-      "        <td>" + textplain + "</td>\n"
-      "      </tr>\n"
-      "      <tr>\n"
-      "        <td>http://" + deviceipaddress + "/get/redled?uid=abcdef</td>\n"
-      "        <td>Get status of red LED</td>\n"
-      "        <td>" + textplain + "</td>\n"
-      "      </tr>\n"
-      "      <tr><td colspan=\"3\" align=\"center\"><b>Automatic operation</b></td></tr>\n"
-      "      <tr>\n"
-      "        <td>http://" + deviceipaddress + "/operation?uid=abcdef&g=20&h1=65&h2=70&h3=80&h4=85&t1=13&t2=150&t3=20&t4=22</td>\n"
-      "        <td>Get all measured data and set limit values</td>\n"
-      "        <td>" + textplain + "</td>\n"
-      "      </tr>\n"
-      "      <tr><td colspan=\"3\" align=\"center\"><b>Manual operation</b></td></tr>\n"
-      "      <tr>\n"
-      "        <td>http://" + deviceipaddress + "/set/all/off?uid=abcdef</td>\n"
-      "        <td>Switch off all LEDs</td>\n"
-      "        <td>" + textplain + "</td>\n"
-      "      </tr>\n"
-      "      <tr>\n"
-      "        <td>http://" + deviceipaddress + "/set/greenled/off?uid=abcdef</td>\n"
-      "        <td>Switch off green LED</td>\n"
-      "        <td>" + textplain + "</td>\n"
-      "      </tr>\n"
-      "      <tr>\n"
-      "        <td>http://" + deviceipaddress + "/set/greenled/on?uid=abcdef</td>\n"
-      "        <td>Switch on green LED</td>\n"
-      "        <td>" + textplain + "</td>\n"
-      "      </tr>\n"
-      "      <tr>\n"
-      "        <td>http://" + deviceipaddress + "/set/yellowled/off?uid=abcdef</td>\n"
-      "        <td>Switch off yellow LED</td>\n"
-      "        <td>" + textplain + "</td>\n"
-      "      </tr>\n"
-      "      <tr>\n"
-      "        <td>http://" + deviceipaddress + "/set/yellowled/on?uid=abcdef</td>\n"
-      "        <td>Switch on yellow LED</td>\n"
-      "        <td>" + textplain + "</td>\n"
-      "      </tr>\n"
-      "      <tr>\n"
-      "        <td>http://" + deviceipaddress + "/set/redled/off?uid=abcdef</td>\n"
-      "        <td>Switch off red LED</td>\n"
-      "        <td>" + textplain + "</td>\n"
-      "      </tr>\n"
-      "      <tr>\n"
-      "        <td>http://" + deviceipaddress + "/set/redled/on?uid=abcdef</td>\n"
-      "        <td>Switch on red LED</td>\n"
-      "        <td>" + textplain + "</td>\n"
-      "      </tr>\n"
-      "    </table>\n"
-      "    <br>\n"
-      "    <hr>\n"
-      "    <center>" + msg[2] + " <a href=\"mailto:" + msg[3] + "\">" + msg[28] + "</a> - <a href=\"" + msg[4] + "\">Homepage</a><center>\n"
-      "    <br>\n"
-      "  </body>\n"
-      "</html>\n";
-    server.send(200, texthtml, line);
-    delay(100);
-  });
-  // write summary of status
-  server.on("/summary", []()
-  {
-    if (checkipaddress() == 1)
-      if (checkuid() == 1)
-      {
-        Serial.println(msg[59]);
-        writesyslog(59);
-        line =
-          "<html>\n"
-          "  <head>\n"
-          "    <title>" + msg[1] + " | Summary of status</title>\n"
-          "    <meta http-equiv=\"refresh\" content=\"60\">\n"
-          "  </head>\n"
-          "  <body bgcolor=\"#e2f4fd\" style=\"font-family:\'sans\'\">\n"
-          "    <h2>" + msg[1] + "</h2>\n"
-          "    <br>\n"
-          "    IP address: " + deviceipaddress + "<br>\n"
-          "    MAC address: " + devicemacaddress + "<br>\n"
-          "    Hardware serial number: " + serialnumber + "<br>\n"
-          "    Software version: v" + swversion + "<br>\n"
-          "    <hr>\n"
-          "    <h3>Summary of status:</h3>\n"
-          "    <table border=\"1\" cellpadding=\"3\" cellspacing=\"0\">\n"
-          "      <tr><td colspan=\"3\" align=\"center\"><b>Operation</b></td></tr>\n"
-          "      <tr>\n"
-          "        <td>Mode:</td>\n"
-          "        <td>";
-        if (autoopmode == false) line = line + "manual"; else line = line + "automatic";
-        line = line +
-               "        </td>\n"
-               "      </tr>\n"
-               "      <tr>\n"
-               "        <td>Temperature limit values:</td>\n"
-               "        <td>" + String((int)t1) + " &deg;C, " + String((int)t2) + " &deg;C, " + String((int)t3) + " &deg;C, " + String((int)t4) + " &deg;C</td>\n"
-               "      </tr>\n"
-               "      <tr>\n"
-               "        <td>Humidity limit values:</td>\n"
-               "        <td>" + String((int)h1) + "%, " + String((int)h2) + " %, " + String((int)h3) + "%, " + String((int)h4) + "%</td>\n"
-               "      </tr>\n"
-               "      <tr>\n"
-               "        <td>Gas level limit value:</td>\n"
-               "        <td>" + String((int)g) + "%</td>\n"
-               "      </tr>\n"
-               "      <tr><td colspan = \"3\" align=\"center\"><b>Measured value</b></td></tr>\n"
-               "      <tr>\n"
-               "        <td>Temperature:</td>\n"
-               "        <td>" + String((int)temperature) + " &deg;C</td>\n"
-               "      </tr>\n"
-               "      <tr>\n"
-               "        <td>Relative humidity:</td>\n"
-               "        <td>" + String((int)humidity) + "%</td>\n"
-               "      </tr>\n"
-               "      <tr>\n"
-               "        <td>Relative gas level:</td>\n"
-               "        <td>" + String((int)unwantedgaslevel) + "%</td>\n"
-               "      </tr>\n"
-               "      <tr><td colspan=\"3\" align=\"center\"><b>Status LEDs</b></td></tr>\n"
-               "      <tr>\n"
-               "        <td>Green:</td>\n"
-               "        <td>";
-        if (green == 1) line = line + "ON"; else line = line + "OFF";
-        line = line +
-               "        </td>\n"
-               "      </tr>\n"
-               "      <tr>\n"
-               "        <td>Yellow:</td>\n"
-               "        <td>";
-        if (yellow == 1) line = line + "ON"; else line = line + "OFF";
-        line = line +
-               "        </td>\n"
-               "      </tr>\n"
-               "      <tr>\n"
-               "        <td>Red:</td>\n"
-               "        <td>";
-        if (red == 1) line = line + "ON"; else line = line + "OFF";
-        line = line +
-               "        </td>\n"
-               "      </tr>\n"
-               "    </table>\n"
-               "    <br>\n"
-               "    <hr>\n"
-               "    <center>" + msg[2] + " <a href=\"mailto:" + msg[3] + "\">" + msg[28] + "</a> - <a href=\"" + msg[4] + "\">Homepage</a><center>\n"
-               "    <br>\n"
-               "  </body>\n"
-               "</html>\n";
-        server.send(200, texthtml, line);
-      }
-  });
-  // write log
-  server.on("/log", []()
-  {
-    if (checkipaddress() == 1)
-      if (checkuid() == 1)
-      {
-        Serial.println(msg[55]);
-        writesyslog(55);
-        line =
-          "<html>\n"
-          "  <head>\n"
-          "    <title>" + msg[1] + " | System log</title>\n"
-          "  </head>\n"
-          "  <body bgcolor=\"#e2f4fd\" style=\"font-family:\'sans\'\">\n"
-          "    <h2>" + msg[1] + "</h2>\n"
-          "    <br>\n"
-          "    IP address: " + deviceipaddress + "<br>\n"
-          "    MAC address: " + devicemacaddress + "<br>\n"
-          "    Hardware serial number: " + serialnumber + "<br>\n"
-          "    Software version: v" + swversion + "<br>\n"
-          "    <hr>\n"
-          "    <h3>Last 64 lines of system log:</h3>\n"
-          "    <table border=\"0\" cellpadding=\"3\" cellspacing=\"0\">\n";
-        for (int i = 0; i < 64; i++)
-          if (syslog[i] > 0)
-            line = line + "      <tr><td><pre>" + String(i) + "</pre></td><td><pre>" + msg[syslog[i]] + "</pre></td></tr>\n";
-        line = line +
-               "    </table>\n"
-               "    <br>\n"
-               "    <hr>\n"
-               "    <center>" + msg[2] + " <a href=\"mailto:" + msg[3] + "\">" + msg[28] + "</a> - <a href=\"" + msg[4] + "\">Homepage</a><center>\n"
-               "    <br>\n"
-               "  </body>\n"
-               "</html>\n";
-        server.send(200, texthtml, line);
-      }
-  });
-  // write device information
-  server.on("/version", []()
-  {
-    writeclientipaddress();
-    Serial.println(msg[33]);
-    writesyslog(33);
-    line = msg[16] + "\n" + swversion + "\n" + serialnumber;
-    server.send(200, textplain, line);
-  });
-
-  // Group #2: set operation mode (auto/manual)
-  // get operation mode
-  server.on("/mode", []()
-  {
-    if (checkipaddress() == 1)
-      if (checkuid() == 1)
-      {
-        Serial.println(msg[58]);
-        writesyslog(58);
-        line = String((int)autoopmode);
-        server.send(200, textplain, line);
-      }
-  });
-  // set automatic operation mode
-  server.on("/mode/auto", []()
-  {
-    if (checkipaddress() == 1)
-      if (checkuid() == 1)
-      {
-        Serial.println(msg[53]);
-        writesyslog(53);
-        autoopmode = true;
-        server.send(200, textplain, msg[27]);
-      }
-  });
-  // set manual operation mode
-  server.on("/mode/manual", []()
-  {
-    if (checkipaddress() == 1)
-      if (checkuid() == 1)
-      {
-        Serial.println(msg[54]);
-        writesyslog(54);
-        autoopmode = false;
-        server.send(200, textplain, msg[27]);
-      }
-  });
-
-  // Group #3: get data
-  // get all measured parameters
-  server.on("/get/all", []()
-  {
-    if (checkipaddress() == 1)
-      if (checkuid() == 1)
-      {
-        Serial.println(msg[34]);
-        writesyslog(34);
-        line = String((int)unwantedgaslevel) + "\n" + String((int)humidity) + "\n" + String((int)temperature);
-        server.send(200, textplain, line);
-      }
-  });
-  // get relative unwanted gas level in percent
-  server.on("/get/unwantedgaslevel", []()
-  {
-    if (checkipaddress() == 1)
-      if (checkuid() == 1)
-      {
-        Serial.println(msg[35]);
-        writesyslog(35);
-        line = String((int)unwantedgaslevel);
-        server.send(200, textplain, line);
-      }
-  });
-  // get relative humidity in percent
-  server.on("/get/humidity", []()
-  {
-    if (checkipaddress() == 1)
-      if (checkuid() == 1)
-      {
-        Serial.println(msg[36]);
-        writesyslog(36);
-        line = String((int)humidity);
-        server.send(200, textplain, line);
-      }
-  });
-  // get temperature in degree Celsius
-  server.on("/get/temperature", []()
-  {
-    if (checkipaddress() == 1)
-      if (checkuid() == 1)
-      {
-        Serial.println(msg[37]);
-        writesyslog(37);
-        line = String((int)temperature);
-        server.send(200, textplain, line);
-      }
-  });
-  // get status of green LED
-  server.on("/get/greenled", []()
-  {
-    if (checkipaddress() == 1)
-      if (checkuid() == 1)
-      {
-        Serial.println(msg[47]);
-        writesyslog(47);
-        line = String((int)green);
-        server.send(200, textplain, line);
-      }
-  });
-  // get status of yellow LED
-  server.on("/get/yellowled", []()
-  {
-    if (checkipaddress() == 1)
-      if (checkuid() == 1)
-      {
-        Serial.println(msg[48]);
-        writesyslog(48);
-        line = String((int)yellow);
-        server.send(200, textplain, line);
-      }
-  });
-  // get status of red LED
-  server.on("/get/redled", []()
-  {
-    if (checkipaddress() == 1)
-      if (checkuid() == 1)
-      {
-        Serial.println(msg[49]);
-        writesyslog(49);
-        line = String((int)red);
-        server.send(200, textplain, line);
-      }
-  });
-
-  // Group #4: automatic operation
-  // set limit values and get all measured parameters
-  server.on("/operation", []()
-  {
-    if (checkipaddress() == 1)
-      if (checkuid() == 1)
-      {
-        Serial.println(msg[38]);
-        writesyslog(38);
-        if (setlimitvalues() == 0) leds();
-        line = String((int)unwantedgaslevel) + "\n" + String((int)humidity) + "\n" + String((int)temperature);
-        server.send(200, textplain, line);
-      }
-  });
-
-  // Group #5: manual operation
-  // set status of all LEDs to off in manual operation mode
-  server.on("/set/all/off", []()
-  {
-    if (checkipaddress() == 1)
-      if (checkuid() == 1)
-        if (autoopmode == false)
-        {
-          Serial.println(msg[50]);
-          Serial.println(msg[51]);
-          Serial.println(msg[52]);
-          writesyslog(50);
-          writesyslog(51);
-          writesyslog(52);
-          green = 0;
-          red = 0;
-          yellow = 0;
-          server.send(200, textplain, msg[27]);
-        }
-  });
-  // set status of green LED to off in manual operation mode
-  server.on("/set/greenled/off", []()
-  {
-    if (checkipaddress() == 1)
-      if (checkuid() == 1)
-        if (autoopmode == false)
-        {
-          Serial.println(msg[50]);
-          writesyslog(50);
-          green = 0;
-          server.send(200, textplain, msg[27]);
-        } else
-          server.send(200, textplain, msg[56]);
-  });
-  // set status of green LED to on in manual operation mode
-  server.on("/set/greenled/on", []()
-  {
-    if (checkipaddress() == 1)
-      if (checkuid() == 1)
-        if (autoopmode == false)
-        {
-          Serial.println(msg[50]);
-          writesyslog(50);
-          green = 1;
-          server.send(200, textplain, msg[27]);
-        } else
-          server.send(200, textplain, msg[56]);
-  });
-  // set status of yellow LED to off in manual operation mode
-  server.on("/set/yellowled/off", []()
-  {
-    if (checkipaddress() == 1)
-      if (checkuid() == 1)
-        if (autoopmode == false)
-        {
-          Serial.println(msg[51]);
-          writesyslog(51);
-          yellow = 0;
-          server.send(200, textplain, msg[27]);
-        } else
-          server.send(200, textplain, msg[56]);
-  });
-  // set status of yellow LED to on in manual operation mode
-  server.on("/set/yellowled/on", []()
-  {
-    if (checkipaddress() == 1)
-      if (checkuid() == 1)
-        if (autoopmode == false)
-        {
-          Serial.println(msg[51]);
-          writesyslog(51);
-          yellow = 1;
-          server.send(200, textplain, msg[27]);
-        } else
-          server.send(200, textplain, msg[56]);
-  });
-  // set status of red LED to off in manual operation mode
-  server.on("/set/redled/off", []()
-  {
-    if (checkipaddress() == 1)
-      if (checkuid() == 1)
-        if (autoopmode == false)
-        {
-          Serial.println(msg[52]);
-          writesyslog(52);
-          red = 0;
-          server.send(200, textplain, msg[27]);
-        } else
-          server.send(200, textplain, msg[56]);
-  });
-  // set status of red LED to on in manual operation mode
-  server.on("/set/redled/on", []()
-  {
-    if (checkipaddress() == 1)
-      if (checkuid() == 1)
-        if (autoopmode == false)
-        {
-          Serial.println(msg[52]);
-          writesyslog(52);
-          red = 1;
-          server.send(200, textplain, msg[27]);
-        } else
-          server.send(200, textplain, msg[56]);
-  });
-  server.begin();
-  Serial.println(msg[8]);
-  beep(1);
-}
-
-// error 404 page
-void handleNotFound()
+  /*  0 */  "",
+  /*  1 */  "MM7D * T/RH measuring device",
+  /*  2 */  "Copyright (C) 2023 ",
+  /*  3 */  "  software version:       ",
+  /*  4 */  "Starting device...",
+  /*  5 */  "* Initializing GPIO ports",
+  /*  6 */  "* Initializing sensor",
+  /*  7 */  "* Connecting to wireless network",
+  /*  8 */  "done",
+  /*  9 */  "  my MAC address:         ",
+  /* 10 */  "  my IP address:          ",
+  /* 11 */  "  subnet mask:            ",
+  /* 12 */  "  gateway IP address:     ",
+  /* 13 */  "* Starting Modbus/TCP server",
+  /* 14 */  "* Starting Modbus/RTU slave",
+  /* 15 */  "  my Modbus UID:          ",
+  /* 16 */  "  serial port speed:      ",
+  /* 17 */  " baud (8N1)",
+  /* 18 */  "* Starting webserver",
+  /* 19 */  "* Ready, the serial console is off.",
+  /* 20 */  "* HTTP/Modbus query received ",
+  /* 21 */  "  get help page",
+  /* 22 */  "  get summary page",
+  /* 23 */  "  get log page",
+  /* 24 */  "  get all data",
+  /* 25 */  "* E01: Failed to read T/RH sensor!",
+  /* 26 */  "* E02: Bad power voltage!",
+  /* 27 */  "* E03: No such page!",
+  /* 28 */  "Pozsar Zsolt",
+  /* 29 */  "http://www.pozsarzs.hu",
+  /* 30 */  "Error 404",
+  /* 31 */  "No such page!",
+  /* 32 */  "Help",
+  /* 33 */  "Information and data access",
+  /* 34 */  "Information pages",
+  /* 35 */  "Data access with HTTP",
+  /* 36 */  "all measured values and status in CSV format",
+  /* 37 */  "all measured values and status in JSON format",
+  /* 38 */  "all measured values and status in TXT format",
+  /* 39 */  "all measured values and status in XML format",
+  /* 40 */  "Data access with Modbus",
+  /* 41 */  "Status: (read-only)",
+  /* 42 */  "Measured values: (read-only)",
+  /* 43 */  "Software version: (read-only)",
+  /* 44 */  "device name",
+  /* 45 */  "software version",
+  /* 46 */  "Network settings: (read-only)",
+  /* 47 */  "MAC address",
+  /* 48 */  "IP address",
+  /* 49 */  "Modbus UID",
+  /* 50 */  "serial port speed",
+  /* 51 */  "Summary",
+  /* 52 */  "All measured values and status",
+  /* 53 */  "Log",
+  /* 54 */  "Last 64 lines of the system log:",
+  /* 55 */  "back",
+  /* 56 */  "Remote access:",
+  /* 57 */  "  HTTP                    ",
+  /* 58 */  "  Modbus/RTU              ",
+  /* 59 */  "  Modbus/TCP              ",
+  /* 60 */  "enable",
+  /* 61 */  "disable"
+};
+const String DI_DESC[3]         =
 {
-  writeclientipaddress();
-  Serial.println(msg[46]);
-  writesyslog(46);
-  server.send(404, textplain, msg[30]);
-}
-
-// loop function
-void loop(void)
+  /*  0 */  "status of the green LED",
+  /*  1 */  "status of the yellow LED",
+  /*  2 */  "status of the red LED"
+};
+const String  IR_DESC[3]        =
 {
-  server.handleClient();
-  unsigned long currtime3 = millis();
-  if (currtime3 - prevtime3 >= interval3)
-  {
-    prevtime3 = currtime3;
-    Serial.println(msg[42]);
-    Serial.println(msg[45]);
-    writesyslog(42);
-    getunwantedgaslevel();
-    gettemphum();
-    leds();
-    greenled(green);
-    yellowled(yellow);
-    redled(red);
-  }
-}
+  /*  0 */  "internal relative humidity in %",
+  /*  1 */  "internal temperature in ",
+  /*  2 */  "power voltage in "
+};
 
-// switch on/off green LED
-void greenled(int i)
-{
-  if (i == 0)
-  {
-    digitalWrite(prt_led_green, LOW);
-    Serial.println(msg[21] + msg[24] + msg[26]);
-  } else
-  {
-    digitalWrite(prt_led_green, HIGH);
-    Serial.println(msg[21] + msg[24] + msg[25]);
-  }
-}
+DHT dht(PRT_DI_SENSOR, TYP_SENSOR, 11);
+ESP8266WebServer httpserver(80);
+ModbusIP mbtcp;
+ModbusRTU mbrtu;
 
-// switch on/off yellow LED
-void yellowled(int i)
-{
-  if (i == 0)
-  {
-    digitalWrite(prt_led_yellow, LOW);
-    Serial.println(msg[23] + msg[24] + msg[26]);
-  } else
-  {
-    digitalWrite(prt_led_yellow, HIGH);
-    Serial.println(msg[23] + msg[24] + msg[25]);
-  }
-}
-
-// switch on/off red LED
-void redled(int i)
-{
-  if (i == 0)
-  {
-    digitalWrite(prt_led_red, LOW);
-    Serial.println(msg[22] + msg[24] + msg[26]);
-  } else
-  {
-    digitalWrite(prt_led_red, HIGH);
-    Serial.println(msg[22] + msg[24] + msg[25]);
-  }
-}
-
-// set limit values
-int setlimitvalues()
-{
-  if (server.args() > 9)
-  {
-    String arg;
-    arg = server.arg("g");
-    if (arg.length() != 0) g = arg.toInt(); else return 1;
-    arg = server.arg("h1");
-    if (arg.length() != 0) h1 = arg.toInt(); else return 1;
-    arg = server.arg("h2");
-    if (arg.length() != 0) h2 = arg.toInt(); else return 1;
-    arg = server.arg("h3");
-    if (arg.length() != 0) h3 = arg.toInt(); else return 1;
-    arg = server.arg("h4");
-    if (arg.length() != 0) h4 = arg.toInt(); else return 1;
-    arg = server.arg("t1");
-    if (arg.length() != 0) t1 = arg.toInt(); else return 1;
-    arg = server.arg("t2");
-    if (arg.length() != 0) t2 = arg.toInt(); else return 1;
-    arg = server.arg("t3");
-    if (arg.length() != 0) t3 = arg.toInt(); else return 1;
-    arg = server.arg("t4");
-    if (arg.length() != 0) t4 = arg.toInt(); else return 1;
-    Serial.println(msg[43]);
-    Serial.println(msg[39] + String(g) + "%");
-    Serial.println(msg[40] + String(h1) + "%; " + String(h2) + "%; " + String(h3) + "%; " + String(h4) + "%" );
-    Serial.println(msg[41] + String(t1) + "°C; " + String(t2) + "°C; " + String(t3) + "°C; " + String(t4) + "°C" );
-    return 0;
-  } else
-  {
-    Serial.println(msg[44]);
-    writesyslog(44);
-    return 1;
-  }
-}
-
-// set status of all LEDs in automatic operation mode
-void leds()
-{
-  if (autoopmode == true)
-  {
-    green = 0;
-    yellow = 0;
-    red = 0;
-    if ((unwantedgaslevel != 999) && (humidity != 999) && (temperature != 999))
-    {
-      if ((int)unwantedgaslevel < g) green = 1;
-      if ((int)unwantedgaslevel == g) yellow = 1;
-      if ((int)unwantedgaslevel > g) red = 1;
-      if ((int)humidity < h1) red = 1;
-      if (((int)humidity > h1) && ((int)humidity < h2)) yellow = 1;
-      if (((int)humidity > h2) && ((int)humidity < h3)) green = 1;
-      if (((int)humidity > h3) && ((int)humidity < h4)) yellow = 1;
-      if ((int)humidity > h4) red = 1;
-      if ((int)temperature < t1) red = 1;
-      if (((int)temperature > t1) && ((int)temperature < t2)) yellow = 1;
-      if (((int)temperature > t2) && ((int)temperature < t3)) green = 1;
-      if (((int)temperature > t3) && ((int)temperature < t4)) yellow = 1;
-      if ((int)temperature > t4) red = 1;
-      if (red == 1)
-      {
-        green = 0;
-        yellow = 0;
-      }
-    }
-  }
-}
-
-// measure air quality
-void getunwantedgaslevel()
-{
-  unsigned long currtime1 = millis();
-  if (currtime1 - prevtime1 >= interval1)
-  {
-    prevtime1 = currtime1;
-    adcvalue = analogRead(prt_sensor2);
-    unwantedgaslevel = adcvalue / (maxadcvalue / 100);
-    if (unwantedgaslevel > 100)
-    {
-      beep(1);
-      Serial.println(msg[14]);
-      writesyslog(14);
-      unwantedgaslevel = 999;
-      return;
-    } else Serial.println(msg[39] + String((int)unwantedgaslevel) + "%");
-  }
-}
-
-// measure temperature and relative humidity
-void gettemphum()
-{
-  unsigned long currtime2 = millis();
-  if (currtime2 - prevtime2 >= interval1)
-  {
-    prevtime2 = currtime2;
-    humidity = dht.readHumidity();
-    temperature = dht.readTemperature(false);
-    if (isnan(humidity) || isnan(temperature))
-    {
-      beep(1);
-      Serial.println(msg[15]);
-      writesyslog(15);
-      temperature = 999;
-      humidity = 999;
-      return;
-    } else
-    {
-      Serial.println(msg[40] + String((int)humidity) + "%");
-      Serial.println(msg[41] + String((int)temperature) + " °C");
-    }
-  }
-}
-
-// blink blue LED and write client IP address to serial console
-void writeclientipaddress()
-{
-  digitalWrite(prt_led_blue, HIGH);
-  delay(100);
-  digitalWrite(prt_led_blue, LOW);
-  clientaddress = server.client().remoteIP().toString();
-  Serial.println(msg[13] + clientaddress + ".");
-  writesyslog(57);
-}
-
-// check IP address of client
-int checkipaddress()
-{
-  int allowed = 0;
-  writeclientipaddress();
-  StringSplitter *splitter = new StringSplitter(allowedaddress, ' ', 3);
-  int itemCount = splitter->getItemCount();
-  for (int i = 0; i < itemCount; i++)
-  {
-    String item = splitter->getItemAtIndex(i);
-    if (clientaddress == String(item)) allowed = 1;
-  }
-  if (allowed == 1) return 1; else
-  {
-    server.send(401, textplain, msg[19]);
-    Serial.println(msg[20]);
-    writesyslog(20);
-    beep(3);
-    return 0;
-  }
-}
-
-// check UID
-int checkuid()
-{
-  if (server.arg("uid") == uid) return 1; else
-  {
-    server.send(401, textplain, msg[17]);
-    Serial.println(msg[18]);
-    writesyslog(18);
-    beep(2);
-    return 0;
-  }
-}
-
-// beep sign
-void beep(int num)
-{
-  for (int i = 0; i < num; i++)
-  {
-    tone(prt_buzzer, 880);
-    delay (100);
-    noTone(prt_buzzer);
-    delay (100);
-  }
-}
-
+// --- SYSTEM LOG ---
 // write a line to system log
-void writesyslog(int msgnum)
+void writetosyslog(int msgnum)
 {
   if (syslog[63] == 0)
   {
@@ -975,4 +185,680 @@ void writesyslog(int msgnum)
       syslog[i - 1] = syslog[i];
     syslog[63] = msgnum;
   }
+}
+
+// --- STATIC MODBUS REGISTERS ---
+// convert hex string to byte
+byte hstol(String recv) {
+  return strtol(recv.c_str(), NULL, 16);
+}
+
+// fill holding registers with configuration data
+void fillholdingregisters()
+{
+  int    itemCount;
+  String s;
+  // name
+  s = SWNAME;
+  while (s.length() < 8)
+    s = char(0x00) + s;
+  for (int i = 0; i < 9; i++)
+    mbrtu.Hreg(i, char(s[i]));
+  // version
+  StringSplitter *splitter1 = new StringSplitter(SWVERSION, '.', 3);
+  itemCount = splitter1->getItemCount();
+  for (int i = 0; i < itemCount; i++)
+  {
+    String item = splitter1->getItemAtIndex(i);
+    mbrtu.Hreg(8 + i, item.toInt());
+  }
+  delete splitter1;
+  // MAC-address
+  StringSplitter *splitter2 = new StringSplitter(mymacaddress, ':', 6);
+  itemCount = splitter2->getItemCount();
+  for (int i = 0; i < itemCount; i++)
+  {
+    String item = splitter2->getItemAtIndex(i);
+    mbrtu.Hreg(11 + i, hstol(item));
+  }
+  delete splitter2;
+  // IP-address
+  StringSplitter *splitter3 = new StringSplitter(myipaddress, '.', 4);
+  itemCount = splitter3->getItemCount();
+  for (int i = 0; i < itemCount; i++)
+  {
+    String item = splitter3->getItemAtIndex(i);
+    mbrtu.Hreg(17 + i, item.toInt());
+  }
+  delete splitter3;
+  // MB UID
+  mbrtu.Hreg(21, MB_UID);
+  // serial speed
+  s = String(COM_SPEED);
+  while (s.length() < 6)
+    s = char(0x00) + s;
+  for (int i = 0; i < 6; i++)
+    mbrtu.Hreg(22 + i, char(s[i]));
+}
+
+// --- LEDS AND BUZZER ---
+// switch on/off blue LED
+void blueled(boolean b)
+{
+  digitalWrite(PRT_DO_LEDBLUE, b);
+}
+
+// switch on/off green LED
+void greenled(boolean b)
+{
+  mbrtu.Ists(0, b);
+  digitalWrite(PRT_DO_LEDGREEN, b);
+}
+
+// switch on/off yellow LED
+void yellowled(boolean b)
+{
+  mbrtu.Ists(1, b);
+  digitalWrite(PRT_DO_LEDYELLOW, b);
+}
+
+// switch on/off red LED
+void redled(boolean b)
+{
+  mbrtu.Ists(2, b);
+  digitalWrite(PRT_DO_LEDRED, b);
+}
+
+// blinking blue LED
+void blinkblueled()
+{
+  blueled(true);
+  delay(25);
+  blueled(false);
+}
+
+// blinking yellow LED
+void blinkyellowled()
+{
+  yellowled(true);
+  delay(25);
+  yellowled(false);
+}
+
+// blinking all LEDs
+void knightrider()
+{
+  blueled(true);
+  delay(75);
+  blueled(false);
+  greenled(true);
+  delay(75);
+  greenled(false);
+  yellowled(true);
+  delay(75);
+  yellowled(false);
+  redled(true);
+  delay(75);
+  redled(false);
+  yellowled(true);
+  delay(75);
+  yellowled(false);
+  greenled(true);
+  delay(75);
+  greenled(false);
+}
+
+// beep sign
+void beep(int num)
+{
+  for (int i = 0; i < num; i++)
+  {
+    tone(PRT_DO_BUZZER, 880);
+    delay (100);
+    noTone(PRT_DO_BUZZER);
+    delay (100);
+  }
+}
+
+// --- MEASURING ---
+// measure internal temperature and relative humidity
+boolean measureinttemphum()
+{
+  float fh, ft;
+  fh = dht.readHumidity();
+  ft = dht.readTemperature(false);
+  if (isnan(fh) || isnan(ft))
+  {
+    beep(1);
+    writetosyslog(25);
+    return false;
+  } else
+  {
+    mbrtu.Ireg(0, round(fh));
+    mbrtu.Ireg(1, round(ft + 273.15)); // convert to K
+    return true;
+  }
+}
+
+// measure power voltage
+boolean measurepowervoltage()
+{
+  int adc;
+  float vadc;
+  float vcc;
+  const float R107 = 5100; // ohm
+  const float R108 = 708; // ohm
+  const int VREF = 1000; // mV
+
+  adc = analogRead(PRT_AI);
+  vadc = (adc * VREF) / 1024;
+  vcc = vadc * (1 + (R107 / R108));
+  mbrtu.Ireg(2, vcc);
+  if ((vcc < MINVCC) || (vcc > MAXVCC))
+  {
+    beep(1);
+    writetosyslog(26);
+    return false;
+  } else return true;
+}
+
+// --- DATA RETRIEVING ---
+// blink blue LED and write to log
+uint16_t modbusquery(TRegister* reg, uint16_t val)
+{
+  blinkblueled();
+  writetosyslog(20);
+  return val;
+}
+
+// --- WEBPAGES ---
+// header for pages
+void header_html()
+{
+  htmlheader = 
+    "    <table border=\"0\">\n"
+    "      <tbody>\n"
+    "      <tr><td><i>" + MSG[9] + "</i></td><td>" + mymacaddress + "</td></tr>\n"
+    "      <tr><td><i>" + MSG[10] + "</i></td><td>" + myipaddress + "</td></tr>\n"
+    "      <tr><td><i>" + MSG[3] + "</i></td><td>v" + SWVERSION + "</td></tr>\n"
+    "      <tr><td><i>" + MSG[15] + "</i></td><td>" + String(MB_UID) + "</td></tr>\n"
+    "      <tr><td><i>" + MSG[16] + "</i></td><td>" + String(COM_SPEED) + MSG[17] + "</td></tr>\n"
+    "      </tbody>\n"
+    "    </table>\n";
+}
+
+// error 404 page
+void handleNotFound()
+{
+  writetosyslog(20);
+  writetosyslog(27);
+  line = DOCTYPEHTML +
+         "<html>\n"
+         "  <head>\n"
+         "    <title>" + MSG[1] + " | " + MSG[30] + "</title>\n"
+         "  </head>\n"
+         "  <body bgcolor=\"#e2f4fd\" style=\"font-family:\'sans\'\">\n"
+         "    <h2>" + MSG[1] + "</h2>\n"
+         "    <br>\n" + htmlheader + "    <hr>\n"
+         "    <h3>" + MSG[30] + "</h3>\n" + MSG[31] + "\n"
+         "    <br>\n"
+         "    <hr>\n"
+         "    <div align=\"right\"><a href=\"/\">" + MSG[55] + "</a></div>\n"
+         "    <br>\n"
+         "    <center>" + MSG[2] + " <a href=\"" + MSG[29] + "\">" + MSG[28] + "</a></center>\n"
+         "    <br>\n"
+         "  </body>\n"
+         "</html>\n";
+  httpserver.send(404, TEXTHTML, line);
+  delay(100);
+}
+
+// help page
+void handleHelp()
+{
+  writetosyslog(20);
+  writetosyslog(21);
+  line = DOCTYPEHTML +
+         "<html>\n"
+         "  <head>\n"
+         "    <title>" + MSG[1] + " | " + MSG[32] + "</title>\n"
+         "  </head>\n"
+         "  <body bgcolor=\"#e2f4fd\" style=\"font-family:\'sans\'\">\n"
+         "    <h2>" + MSG[1] + "</h2>\n"
+         "    <br>\n" + htmlheader + "    <hr>\n"
+         "    <h3>" + MSG[33] + "</h3>\n"
+         "    <table border=\"1\" cellpadding=\"3\" cellspacing=\"0\">\n"
+         "      <tr><td colspan=\"3\" align=\"center\"><b>" + MSG[34] + "</b></td></tr>\n"
+         "      <tr>\n"
+         "        <td><a href=\"http://" + myipaddress + "/\">http://" + myipaddress + "/</a></td>\n"
+         "        <td>" + MSG[32] + "</td>\n"
+         "        <td>" + TEXTHTML + "</td>\n"
+         "      </tr>\n"
+         "      <tr>\n"
+         "        <td><a href=\"http://" + myipaddress + "/summary\">http://" + myipaddress + "/summary</a></td>\n"
+         "        <td>" + MSG[51] + "</td>\n"
+         "        <td>" + TEXTHTML + "</td>\n"
+         "      </tr>\n"
+         "      <tr>\n"
+         "        <td><a href=\"http://" + myipaddress + "/log\">http://" + myipaddress + "/log</a></td>\n"
+         "        <td>" + MSG[53] + "</td>\n"
+         "        <td>" + TEXTHTML + "</td>\n"
+         "      </tr>\n"
+         "      <tr><td colspan=\"3\" align=\"center\"><b>" + MSG[35] + "</b></td>\n"
+         "      <tr>\n"
+         "        <td><a href=\"http://" + myipaddress + "/get/csv\">http://" + myipaddress + "/get/csv</a></td>\n"
+         "        <td>" + MSG[36] + "</td>\n"
+         "        <td>" + TEXTPLAIN + "</td>\n"
+         "      </tr>\n"
+         "      <tr>\n"
+         "        <td><a href=\"http://" + myipaddress + "/get/json\">http://" + myipaddress + "/get/json</a></td>\n"
+         "        <td>" + MSG[37] + "</td>\n"
+         "        <td>" + TEXTPLAIN + "</td>\n"
+         "      </tr>\n"
+         "      <tr>\n"
+         "        <td><a href=\"http://" + myipaddress + "/get/txt\">http://" + myipaddress + "/get/txt</a></td>\n"
+         "        <td>" + MSG[38] + "</td>\n"
+         "        <td>" + TEXTPLAIN + "</td>\n"
+         "      </tr>\n"
+         "      <tr>\n"
+         "        <td><a href=\"http://" + myipaddress + "/get/xml\">http://" + myipaddress + "/get/xml</a></td>\n"
+         "        <td>" + MSG[39] + "</td>\n"
+         "        <td>" + TEXTPLAIN + "</td>\n"
+         "      </tr>\n"
+         "      <tr><td colspan=\"3\" align=\"center\"><b>" + MSG[40] + "</b></td>\n"
+         "      <tr><td colspan=\"3\"><i>" + MSG[41] + "</i></td>\n";
+  for (int i = 0; i < 3; i++)
+  {
+    line +=
+      "      <tr>\n"
+      "        <td>" + String(i + 10001) + "</td>\n"
+      "        <td>" + DI_DESC[i] + "</td>\n"
+      "        <td>bit</td>\n"
+      "      </tr>\n";
+  }
+  line += "      <tr><td colspan=\"3\"><i>" + MSG[42] + "</i></td>\n";
+  String s;
+  for (int i = 0; i < 3; i++)
+  {
+    s = IR_DESC[i] ;
+    if (i == 1) s += "K";
+    if (i == 2) s += "mV";
+    line +=
+      "      <tr>\n"
+      "        <td>" + String(i + 30001) + "</td>\n"
+      "        <td>" + s + "</td>\n"
+      "        <td>uint16</td>\n"
+      "      </tr>\n";
+  }
+  line +=
+    "      <tr><td colspan=\"3\"><i>" + MSG[43] + "</i></td>\n"
+    "      <tr>\n"
+    "        <td>40001-40008</td>\n"
+    "        <td>" + MSG[44] + "</td>\n"
+    "        <td>8 char</td>\n"
+    "      </tr>\n"
+    "      <tr>\n"
+    "        <td>40009-40011</td>\n"
+    "        <td>" + MSG[45] + "</td>\n"
+    "        <td>3 byte</td>\n"
+    "      </tr>\n"
+    "      <tr><td colspan=\"3\"><i>" + MSG[46] + "</i></td>\n"
+    "      <tr>\n"
+    "        <td>40012-40017</td>\n"
+    "        <td>" + MSG[47] + "</td>\n"
+    "        <td>6 byte</td>\n"
+    "      </tr>\n"
+    "      <tr>\n"
+    "        <td>40018-40021</td>\n"
+    "        <td>" + MSG[48] + "</td>\n"
+    "        <td>4 byte</td>\n"
+    "      </tr>\n"
+    "      <tr>\n"
+    "        <td>40022</td>\n"
+    "        <td>" + MSG[49] + "</td>\n"
+    "        <td>1 byte</td>\n"
+    "      </tr>\n"
+    "      <tr>\n"
+    "        <td>40023-40028</td>\n"
+    "        <td>" + MSG[50] + "</td>\n"
+    "        <td>6 char</td>\n"
+    "      </tr>\n"
+    "    </table>\n"
+    "    <br>\n"
+    "    <hr>\n"
+    "    <br>\n"
+    "    <center>" + MSG[2] + " <a href=\"" + MSG[29] + "\">" + MSG[28] + "</a></center>\n"
+    "    <br>\n"
+    "  </body>\n"
+    "</html>\n";
+  httpserver.send(200, TEXTHTML, line);
+  delay(100);
+};
+
+// summary page
+void handleSummary()
+{
+  writetosyslog(20);
+  writetosyslog(22);
+  float f;
+  f = mbrtu.Ireg(2);
+  f = f / 1000;
+  line = DOCTYPEHTML +
+         "<html>\n"
+         "  <head>\n"
+         "    <title>" + MSG[1] + " | " + MSG[51] + "</title>\n"
+         "  </head>\n"
+         "  <body bgcolor=\"#e2f4fd\" style=\"font-family:\'sans\'\">\n"
+         "    <h2>" + MSG[1] + "</h2>\n"
+         "    <br>\n" + htmlheader + "    <hr>\n"
+         "    <h3>" + MSG[52] + "</h3>\n"
+         "    <table border=\"1\" cellpadding=\"3\" cellspacing=\"0\">\n"
+         "      <tr>\n"
+         "        <td>" + IR_DESC[0] + "</td>\n"
+         "        <td align=\"right\">" + String(mbrtu.Ireg(0)) + "</td>\n"
+         "      </tr>\n"
+         "      <tr>\n"
+         "        <td>" + IR_DESC[1] + "&deg;C</td>\n"
+         "        <td align=\"right\">" + String(mbrtu.Ireg(1) - 273) + "</td>\n"
+         "      </tr>\n"
+         "      <tr>\n"
+         "        <td>" + IR_DESC[2] + "V</td>\n"
+         "        <td align=\"right\">" + String(f) + "</td>\n"
+         "      </tr>\n";
+  for (int i = 0; i < 3; i++)
+  {
+    line +=
+      "      <tr>\n"
+      "        <td>" + DI_DESC[i] + "</td>\n"
+      "        <td align=\"right\">" + String(mbrtu.Ists(i)) + "</td>\n"
+      "      </tr>\n";
+  }
+  line +=
+    "    </table>\n"
+    "    <br>\n"
+    "    <hr>\n"
+    "    <div align=\"right\"><a href=\"/\">" + MSG[55] + "</a></div>\n"
+    "    <br>\n"
+    "    <center>" + MSG[2] + " <a href=\"" + MSG[29] + "\">" + MSG[28] + "</a></center>\n"
+    "    <br>\n"
+    "  </body>\n"
+    "</html>\n";
+  httpserver.send(200, TEXTHTML, line);
+  delay(100);
+}
+
+// log page
+void handleLog()
+{
+  writetosyslog(20);
+  writetosyslog(23);
+  line = DOCTYPEHTML +
+         "<html>\n"
+         "  <head>\n"
+         "    <title>" + MSG[1] + " | " + MSG[53] + "</title>\n"
+         "  </head>\n"
+         "  <body bgcolor=\"#e2f4fd\" style=\"font-family:\'sans\'\">\n"
+         "    <h2>" + MSG[1] + "</h2>\n"
+         "    <br>\n" + htmlheader + "    <hr>\n"
+         "    <h3>" + MSG[54] + "</h3>\n"
+         "    <table border=\"0\" cellpadding=\"3\" cellspacing=\"0\">\n";
+  for (int i = 0; i < 64; i++)
+    if (syslog[i] > 0)
+      line += "      <tr><td align=right><b>" + String(i) + "</b></td><td>" + MSG[syslog[i]] + "</td></tr>\n";
+  line +=
+    "    </table>\n"
+    "    <br>\n"
+    "    <hr>\n"
+    "    <div align=\"right\"><a href=\"/\">" + MSG[55] + "</a></div>\n"
+    "    <br>\n"
+    "    <center>" + MSG[2] + " <a href=\"" + MSG[29] + "\">" + MSG[28] + "</a></center>\n"
+    "    <br>\n"
+    "  </body>\n"
+    "</html>\n";
+  httpserver.send(200, TEXTHTML, line);
+  delay(100);
+}
+
+// get all measured data in CSV format
+void handleGetCSV()
+{
+  writetosyslog(20);
+  writetosyslog(24);
+  line = "\"" + HR_NAME[0] + "\",\"" + SWNAME + "\"\n"
+         "\"" + HR_NAME[1] + "\",\"" + SWVERSION + "\"\n"
+         "\"" + HR_NAME[2] + "\",\"" + mymacaddress + "\"\n"
+         "\"" + HR_NAME[3] + "\",\"" + myipaddress + "\"\n"
+         "\"" + HR_NAME[4] + "\",\"" + String(MB_UID) + "\"\n"
+         "\"" + HR_NAME[5] + "\",\"" + String(COM_SPEED) + MSG[17] + "\"\n";
+  for (int i = 0; i < 3; i++)
+    line += "\"" + IR_NAME[i] + "\",\"" + String(mbrtu.Ireg(i)) + "\"\n";
+  for (int i = 0; i < 3; i++)
+    line += "\"" + DI_NAME[i] + "\",\"" + String(mbrtu.Ists(i)) + "\"\n";
+  httpserver.send(200, TEXTPLAIN, line);
+  delay(100);
+}
+
+// get all measured values in JSON format
+void handleGetJSON()
+{
+  writetosyslog(20);
+  writetosyslog(24);
+  line = "{\n"
+         "  \"software\": {\n"
+         "    \"" + HR_NAME[0] + "\": \"" + SWNAME + "\",\n"
+         "    \"" + HR_NAME[1] + "\": \"" + SWVERSION + "\"\n"
+         "  },\n"
+         "  \"hardware\": {\n"
+         "    \"" + HR_NAME[2] + "\": \"" + mymacaddress + "\",\n"
+         "    \"" + HR_NAME[3] + "\": \"" + myipaddress + "\",\n"
+         "    \"" + HR_NAME[4] + "\": \"" + String(MB_UID) + "\",\n"
+         "    \"" + HR_NAME[5] + "\": \"" + String(COM_SPEED) + MSG[17] + "\"\n"
+         "  },\n"
+         "  \"data\": {\n"
+         "    \"integer\": {\n";
+  for (int i = 0; i < 3; i++)
+  {
+    line += "      \"" + IR_NAME[i] + "\": \"" + String(mbrtu.Ireg(i));
+    if (i < 2 ) line += "\",\n"; else  line += "\"\n";
+  }
+  line +=
+    "    },\n"
+    "    \"bit\": {\n";
+  for (int i = 0; i < 3; i++)
+  {
+    line += "      \"" + DI_NAME[i] + "\": \"" + String(mbrtu.Ists(i));
+    if (i < 2 ) line += "\",\n"; else  line += "\"\n";
+  }
+  line +=
+    "    }\n"
+    "  }\n"
+    "}\n";
+  httpserver.send(200, TEXTPLAIN, line);
+  delay(100);
+}
+
+// get all measured data in TXT format
+void handleGetTXT()
+{
+  writetosyslog(20);
+  writetosyslog(24);
+  line = SWNAME + "\n" +
+         SWVERSION + "\n" +
+         mymacaddress + "\n" +
+         myipaddress + "\n" + \
+         String(MB_UID) + "\n" + \
+         String(COM_SPEED) + MSG[17] + "\n";
+  for (int i = 0; i < 3; i++)
+    line += String(mbrtu.Ireg(i)) + "\n";
+  for (int i = 0; i < 3; i++)
+    line += String(mbrtu.Ists(i)) + "\n";
+  httpserver.send(200, TEXTPLAIN, line);
+  delay(100);
+}
+
+// get all measured values in XML format
+void handleGetXML()
+{
+  writetosyslog(20);
+  writetosyslog(24);
+  line = "<xml>\n"
+         "  <software>\n"
+         "    <" + HR_NAME[0] + ">" + SWNAME + "</" + HR_NAME[0] + ">\n"
+         "    <" + HR_NAME[1] + ">" + SWVERSION + "</" + HR_NAME[1] + ">\n"
+         "  </software>\n"
+         "  <hardware>\n"
+         "    <" + HR_NAME[2] + ">" + mymacaddress + "</" + HR_NAME[2] + ">\n"
+         "    <" + HR_NAME[3] + ">" + myipaddress + "</" + HR_NAME[3] + ">\n"
+         "    <" + HR_NAME[4] + ">" + String(MB_UID) + "</" + HR_NAME[4] + ">\n"
+         "    <" + HR_NAME[5] + ">" + String(COM_SPEED) + MSG[17] + "</" + HR_NAME[5] + ">\n"
+         "  </hardware>\n"
+         "  <data>\n"
+         "    <integer>\n";
+  for (int i = 0; i < 3; i++)
+    line += "      <" + IR_NAME[i] + ">" + String(mbrtu.Ireg(i)) + "</" + IR_NAME[i] + ">\n";
+  line +=
+    "    </integer>\n"
+    "    <bit>\n";
+  for (int i = 0; i < 3; i++)
+    line += "      <" + DI_NAME[i] + ">" + String(mbrtu.Ists(i)) + "</" + DI_NAME[i] + ">\n";
+  line +=
+    "    </bit>\n"
+    "  </data>\n"
+    "</xml>";
+  httpserver.send(200, TEXTPLAIN, line);
+  delay(100);
+}
+
+// --- MAIN ---
+// initializing function
+void setup(void)
+{
+  // set serial port
+  Serial.begin(COM_SPEED, SERIAL_8N1);
+  // write program information
+  if (SERIAL_CONSOLE)
+  {
+    Serial.println("");
+    Serial.println("");
+    Serial.println(MSG[1]);
+    Serial.println(MSG[2] + MSG[28]);
+    Serial.println(MSG[3] + "v" + SWVERSION );
+    Serial.println(MSG[56]);
+    Serial.print(MSG[57]);
+    if (HTTP) Serial.println(MSG[60]); else Serial.println(MSG[61]);
+    Serial.println(MSG[58] + MSG[60]);
+    Serial.print(MSG[59]);
+    if (MODBUS_TCP) Serial.println(MSG[60]); else Serial.println(MSG[61]);
+  }
+  writetosyslog(4);
+  if (SERIAL_CONSOLE) Serial.println(MSG[4]);
+  // initialize GPIO ports
+  writetosyslog(5);
+  if (SERIAL_CONSOLE) Serial.println(MSG[5]);
+  pinMode(PRT_DO_BUZZER, OUTPUT);
+  pinMode(PRT_DO_LEDBLUE, OUTPUT);
+  pinMode(PRT_DO_LEDGREEN, OUTPUT);
+  pinMode(PRT_DO_LEDRED, OUTPUT);
+  pinMode(PRT_DO_LEDYELLOW, OUTPUT);
+  digitalWrite(PRT_DO_LEDBLUE, LOW);
+  digitalWrite(PRT_DO_LEDGREEN, LOW);
+  digitalWrite(PRT_DO_LEDRED, LOW);
+  digitalWrite(PRT_DO_LEDYELLOW, LOW);
+  // initialize sensor
+  writetosyslog(6);
+  if (SERIAL_CONSOLE) Serial.println(MSG[6]);
+  dht.begin();
+  // connect to wireless network
+  if (HTTP || MODBUS_TCP)
+  {
+    writetosyslog(7);
+    if (SERIAL_CONSOLE) Serial.print(MSG[7]);
+    WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+    while (WiFi.status() != WL_CONNECTED)
+    {
+      knightrider();
+      if (SERIAL_CONSOLE) Serial.print(".");
+    }
+    if (SERIAL_CONSOLE) Serial.println(MSG[8]);
+    WiFi.setAutoReconnect(true);
+    WiFi.persistent(true);
+    myipaddress = WiFi.localIP().toString();
+    mymacaddress = WiFi.macAddress();
+    if (SERIAL_CONSOLE)
+    {
+      Serial.println(MSG[9] + mymacaddress);
+      Serial.println(MSG[10] + myipaddress);
+      Serial.println(MSG[11] + WiFi.subnetMask().toString());
+      Serial.println(MSG[12] + WiFi.gatewayIP().toString());
+    }
+  }
+  // start Modbus/TCP server
+  if (MODBUS_TCP)
+  { 
+    writetosyslog(13);
+    if (SERIAL_CONSOLE) Serial.println(MSG[13]);
+    mbtcp.server();
+  }
+  // start Modbus/RTU slave
+  writetosyslog(14);
+  if (SERIAL_CONSOLE) Serial.println(MSG[14]);
+  mbrtu.begin(&Serial);
+  mbrtu.setBaudrate(COM_SPEED);
+  mbrtu.slave(MB_UID);
+  if (SERIAL_CONSOLE)
+  {
+    Serial.println(MSG[15] + String(MB_UID));
+    Serial.println(MSG[16] + String(COM_SPEED) + MSG[17]);
+  }
+  // set Modbus registers
+  mbrtu.addIsts(0, false, 3);
+  mbrtu.addIreg(0, 0, 3);
+  mbrtu.addHreg(0, 0, 28);
+  // set Modbus callback
+  mbrtu.onGetIsts(0, modbusquery, 1);
+  mbrtu.onGetIreg(0, modbusquery, 1);
+  mbrtu.onGetHreg(0, modbusquery, 1);
+  // fill Modbus holding registers
+  fillholdingregisters();
+  // start webserver
+  if (HTTP)
+  {
+    writetosyslog(17);
+    if (SERIAL_CONSOLE) Serial.println(MSG[18]);
+    header_html();
+    httpserver.onNotFound(handleNotFound);
+    httpserver.on("/", handleHelp);
+    httpserver.on("/summary", handleSummary);
+    httpserver.on("/log", handleLog);
+    httpserver.on("/get/csv", handleGetCSV);
+    httpserver.on("/get/json", handleGetJSON);
+    httpserver.on("/get/txt", handleGetTXT);
+    httpserver.on("/get/xml", handleGetXML);
+    httpserver.begin();
+  }
+  if (SERIAL_CONSOLE) Serial.println(MSG[19]);
+  beep(1);
+}
+
+// loop function
+void loop(void)
+{
+  boolean measureerror;
+  boolean vccerror;
+  if (HTTP) httpserver.handleClient();
+  unsigned long currtime = millis();
+  if (currtime - prevtime >= INTERVAL)
+  {
+    prevtime = currtime;
+    measureerror = measureinttemphum();
+    vccerror = measurepowervoltage();
+    greenled(measureerror);
+    redled(! measureerror);
+    redled(! vccerror);
+    blinkyellowled();
+  }
+  if (MODBUS_TCP) mbtcp.task();
+  delay(10);
+  mbrtu.task();
+  yield();
 }

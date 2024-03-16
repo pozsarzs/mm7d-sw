@@ -1,0 +1,62 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+  <head>
+    <title>MM17D * T/RH measuring device | Test page</title>
+  </head>
+  <body bgcolor="#e2f4fd" font style="font-family:'sans'">
+    <script type="text/javascript">
+      function OpenPage1()
+      {
+        var ipaddress = document.getElementById('ipaddress').value;
+        var page = document.querySelector('input[name = "page"]:checked').value;
+        window.open ("http://" + ipaddress + page, target = 'bottom');
+      }
+      function OpenPage2()
+      {
+        var ipaddress = document.getElementById('ipaddress').value;
+        var page = document.querySelector('input[name = "page"]:checked').value;
+        window.open ("http://" + ipaddress + page, target = '_blank');
+      }
+    </script>
+    <fieldset>
+      <legend>&nbsp;Controller&nbsp;</legend>
+      <label for="ipaddress">IP address of controller:</label><br>
+      <input type="text" id="ipaddress" /><br>
+    </fieldset>
+    <br>
+    <fieldset>
+      <legend>&nbsp;Information pages&nbsp;</legend>
+      <input type="radio" id="page0" name="page" value="">
+      <label for="page0">Show help page</label><br>
+      <input type="radio" id="page1" name="page" value="/summary">
+      <label for="page1">Show summary page</label><br>
+      <input type="radio" id="page2" name="page" value="/log">
+      <label for="page2">Show log page</label><br>
+      <br>
+      <input type="submit" value="Submit" onclick="OpenPage2();" />
+    </fieldset>
+    <br>
+    <fieldset>
+      <legend>&nbsp;Get data&nbsp;</legend>
+      <input type="radio" id="page11" name="page" value="/get/csv">
+        <label for="page11">Get all measured values in CSV format</label><br>
+      <input type="radio" id="page12" name="page" value="/get/json">
+        <label for="page12">Get all measured values in JSON format</label><br>
+      <input type="radio" id="page13" name="page" value="/get/txt">
+        <label for="page13">Get all measured values in TXT format</label><br>
+      <input type="radio" id="page14" name="page" value="/get/xml">
+        <label for="page14">Get all measured values in XML format</label><br>
+      <br>
+      <input type="submit" value="View in the bottom frame" onclick="OpenPage1();" />&nbsp;
+      <input type="submit" value="View on new tab" onclick="OpenPage2();" />
+    </fieldset>
+    <center>
+      <br>
+      Copyright (C) 2023 <a href="pozsarzs@gmail.com">Pozs&aacute;r Zsolt</a> *
+      <a href="http://www.pozsarzs.hu">Homepage</a> * 
+      <a href="https://github.com/pozsarzs/mm17d-sw">GitHub</a>
+      <br>
+      <br>
+    </center>
+  </body>
+</html>

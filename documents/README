@@ -3,45 +3,154 @@ Operating program for MM7D device
 
 1. About software
 ~~~~~~~~~~~~~~~~~
-  It is an internal software for air quality measuring device.
-  This device can measure temperature and humidity of growing house air, and
-detect some unwanted gas (CO2, NH3, NOx, alcohol, benzene etc.) and smoke, and
-has got three different color status LED.
-  The device can be controlled via wireless network by HTTP.
+It is an internal software for RH/T measuring device. This device can measure
+internal temperature and humidity.
+
+It has a web interface. The status and the measured data can be queried via
+WLAN using HTTP in four formats (CSV, JSON, TXT and XML) and using Modbus/TCP.
+Can also be queried via RS-232 TTL port using Modbus/RTU protocol. Default
+serial port parameters for serial console and Modbus/RTU connection: 9600 bps,
+8N1.
 
 Requirements:
-
   Hardware: ESP8266 Huzzah Breakout microcontroller
-  Software: Adafruit Unified Sensor library v1.1.4 by Adafruit Industries
-            Arduino String Splitter Library v1.0.0 by Harsha Alva
-            DHT sensor library v1.3.10 by Adafruit Industries
+  Software: - Adafruit Unified Sensor library v1.1.4 by Adafruit Industries
+            - DHT sensor library v1.4.4 by Adafruit Industries
+            - Modbus-ESP8266 library v4.1.0 by Andre Sarmento Barbosa,
+              Alexander Emelianov
+            - ESP8266WebServer library v1.0 by Ivan Grokhotkov
+            - ESP8266WiFi library v1.0 by Ivan Grokhotkov
+            - StringSplitter library v1.0.0 by Harsha Alva
 
-2. How to get installer package?
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-a. Visit homepage (see later) to download package:
+2. Settings
+~~~~~~~~~~~
+In the 'mm7d.ino' file:
+
+  const bool    SERIAL_CONSOLE    = true;  // enable/disable boot-time serial console
+  const bool    HTTP              = true;  // enable/disable HTTP access
+  const bool    MODBUS_TCP        = true;  // enable/disable Modbus/TCP access
+  const int     COM_SPEED         = 9600;  // baudrate of the serial port
+  const int     MB_UID            = 1;     // Modbus UID
+  const char   *WIFI_SSID         = "";    // Wifi SSID
+  const char   *WIFI_PASSWORD     = "";    // Wifi password
+
+3. Serial console output
+~~~~~~~~~~~~~~~~~~~~~~~~
+The serial console shuts down at the end of the startup process to free the
+serial port for Modbus/RTU communication.
+
+  MM7D * T/RH measuring device
+  Copyright (C) 2023 Pozsar Zsolt
+    software version:       v0.4.0
+  Remote access:
+    HTTP                    enable
+    Modbus/RTU              enable
+    Modbus/TCP              enable
+  Starting device...
+  * Initializing GPIO ports
+  * Initializing sensor
+  * Connecting to wireless network.......done
+    my MAC address:         80:7D:3A:5D:53:84
+    my IP address:          192.168.0.103
+    subnet mask:            255.255.255.0
+    gateway IP address:     192.168.0.1
+  * Starting Modbus/TCP server
+  * Starting Modbus/RTU slave
+    my Modbus UID:          1
+    serial port speed:      9600
+  * Starting webserver
+  * Ready, the serial console is off.
+
+4. Information and data retrieving
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+a. HTML information pages:
+  http://../          help                                     text/html
+  http://../summary   summary                                  text/html
+  http://../log       log                                      text/html
+
+b. Data access with HTTP:
+  http://../get/csv   all values and status in CSV format      text/plain
+  http://../get/json  all values and status in JSON format     text/plain
+  http://../get/txt   all measured values in TXT format        text/plain
+  http://../get/xml   all measured values in XML format        text/plain
+
+  Output format:
+
+  CSV:                                         TXT:
+    "name","MM7D"                                MM7D
+    "version","0.4.0"                            0.4.0
+    "mac_address","80:7D:3A:5D:53:84"            80:7D:3A:5D:53:84
+    "ip_address","192.168.0.103"                 192.168.0.103
+    "modbus_uid","1"                             1
+    "com_speed","9600"                           9600
+    "rhint","67"                                 67
+    "tint","292"                                 292
+    "vcc","5020"                                 5020
+    "ledg","1"                                   1
+    "ledy","0"                                   0
+    "ledr","0"                                   0
+
+  JSON:                                        XML:
+    "{                                           <xml>
+      "software": {                                <software>
+        "name": "MM7D",                              <name>MM7D</name>
+        "version": "0.4.0"                           <version>0.4.0</version>
+      },                                           </software>
+      "hardware": {                                <hardware>
+        "mac_address": "80:7D:3A:5D:53:84",          <mac_address>80:7D:3A:5D:53:84</mac_address>
+        "ip_address": "192.168.0.103",               <ip_address>192.168.0.103</ip_address>
+        "modbus_uid": "1",                           <modbus_uid>1</modbus_uid>
+        "com_speed": "9600"                          <com_speed>9600</com_speed>
+      },                                           </hardware>
+      "data": {                                    <data>
+        "integer": {                                 <integer>
+          "rhint": "67",                               <rhint>67</rhint>
+          "tint": "292",                               <tint>292</tint>
+          "vcc": "5020"                                <vcc>5020</vcc>
+        },                                           </integer>
+        "bit": {                                     <bit>
+          "ledg": "1",                                 <ledg>1</ledg>
+          "ledy": "0",                                 <ledy>0</ledy>
+          "ledr": "0"                                  <ledr>0</ledr>
+        }                                            </bit>
+      }                                            </data>
+    }                                            </xml>
+
+c. Data access with Modbus:
+  10001               status of the green LED   (0/1: off/on)     bit
+  10002               status of the yellow LED  (0/1: off/on)     bit
+  10003               status of the red LED     (0/1: off/on)     bit
+
+  30001               internal humidity in percent             uint16
+  30002               internal temperature in K                uint16
+  30003               power voltage in mV                      uint16
+
+  40001-40008         device name                  8 ASCII coded char
+  40009-40011         software version                         3 byte
+  40012-40017         MAC address                              6 byte
+  40018-40021         IP address                               4 byte
+  40022               modbus UID                               1 byte
+  40023-40028         serial port speed            6 ASCII coded char
+
+5. Get installer package
+~~~~~~~~~~~~~~~~~~~~~~~~
+Visit homepage (see later) to download package:
 
   architecture  operation system        filename
   --------------------------------------------------------
-  (all)         (source code)           mm7d-sw-0.3.tar.gz
+  (all)         (source code)           mm7d-sw-0.1.tar.gz
 
-b. Download from Github
+Download from Github
 
-  $ git clone https://github.com/pozsarzs/mm7d-sw.git
+  $ git clone https://github.com/pozsarzs/mm17d-sw.git
 
-3. Contact
+6. Contact
 ~~~~~~~~~~
-   Homepage:             <http://www.szerafingomba.hu/softwares/>
+   Homepage:             <http://www.pozsarzs.hu>
    Author:               Pozsar Zsolt
-   Tax ID:               60407850-1-36
-   Registration num.:    20703695
-
-   E-mail:               <pozsar.zsolt@szerafingomba.hu>
+   E-mail:               <pozsarzs@gmail.com>
    Phone:                +36 56/470-272
    Mobile:               +36 30/249-5030
-   Postal address:       Pozsar Zsolt
-                         Kurazsi Fo ut 1.
-                         HU-5430 Tiszafoldvar
-                         Hungary
 
 --------------------------------------------------------------------------------
- MM7D * Copyright (C) 2020-2021 Pozsar Zsolt <pozsar.zsolt@szerafingomba.hu>
+ MM17D * Copyright (C) 2023 Pozsár Zsolt <pozsarzs@gmail.com>

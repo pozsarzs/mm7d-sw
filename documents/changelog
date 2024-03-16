@@ -1,3 +1,13 @@
+mm7d (0.4) unstable; urgency=low
+
+  * New web interface.
+  * New operation.
+  * HTTP data access in four formats (CSV, JSON, TXT and XML).
+  * Added Modbus/RTU and Modbus/TCP access.
+  * Removed gas sensor.
+
+ -- Pozsar Zsolt <pozsarzs@gmail.com>  Thu, 12 Oct 2023 20:35:00
+
 mm7d (0.3) unstable; urgency=low
 
   * New help page.
