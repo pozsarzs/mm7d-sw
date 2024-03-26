@@ -27,7 +27,7 @@ const bool    SERIAL_CONSOLE    = true;           // enable/disable boot-time se
 const bool    HTTP              = true;           // enable/disable HTTP access
 const bool    MODBUS_TCP        = true;           // enable/disable Modbus/TCP access
 const int     COM_SPEED         = 9600;           // baudrate of the serial port
-const int     MB_UID            = 2;              // Modbus UID
+const int     MB_UID            = 4;              // Modbus UID
 const char   *WIFI_SSID         = "";             // Wifi SSID
 const char   *WIFI_PASSWORD     = "";             // Wifi password
 
@@ -74,6 +74,7 @@ const String  TEXTPLAIN         = "text/plain";
 const String  DOCTYPEHTML       = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" \"http://www.w3.org/TR/html4/loose.dtd\">\n";
 
 // other variables
+bool          extmbquery;
 int           syslog[64]        = {};
 String        htmlheader;
 String        line;
@@ -82,7 +83,7 @@ String        mymacaddress      = "00:00:00:00:00:00";
 unsigned long prevtime          = 0;
 
 // messages
-const String  MSG[62]           =
+const String  MSG[63]           =
 {
   /*  0 */  "",
   /*  1 */  "MM7D * T/RH measuring device",
@@ -104,7 +105,7 @@ const String  MSG[62]           =
   /* 17 */  " baud (8N1)",
   /* 18 */  "* Starting webserver",
   /* 19 */  "* Ready, the serial console is off.",
-  /* 20 */  "* HTTP/Modbus query received ",
+  /* 20 */  "* HTTP query received:",
   /* 21 */  "  get help page",
   /* 22 */  "  get summary page",
   /* 23 */  "  get log page",
@@ -145,7 +146,8 @@ const String  MSG[62]           =
   /* 58 */  "  Modbus/RTU              ",
   /* 59 */  "  Modbus/TCP              ",
   /* 60 */  "enable",
-  /* 61 */  "disable"
+  /* 61 */  "disable",
+  /* 62 */  "* Modbus query received"
 };
 const String DI_DESC[3]         =
 {
@@ -346,8 +348,8 @@ boolean measurepowervoltage()
   int adc;
   float vadc;
   float vcc;
-  const float R107 = 5100; // ohm
-  const float R108 = 708; // ohm
+  const float R107 = 4700; // ohm
+  const float R108 = 680; // ohm
   const int VREF = 1000; // mV
 
   adc = analogRead(PRT_AI);
@@ -367,7 +369,7 @@ boolean measurepowervoltage()
 uint16_t modbusquery(TRegister* reg, uint16_t val)
 {
   blinkblueled();
-  writetosyslog(20);
+  if (extmbquery) writetosyslog(62);
   return val;
 }
 
@@ -418,6 +420,7 @@ void handleHelp()
 {
   writetosyslog(20);
   writetosyslog(21);
+  extmbquery = false;
   line = DOCTYPEHTML +
          "<html>\n"
          "  <head>\n"
@@ -532,6 +535,7 @@ void handleHelp()
     "  </body>\n"
     "</html>\n";
   httpserver.send(200, TEXTHTML, line);
+  extmbquery = true;
   delay(100);
 };
 
@@ -540,6 +544,7 @@ void handleSummary()
 {
   writetosyslog(20);
   writetosyslog(22);
+  extmbquery = false;
   float f;
   f = mbrtu.Ireg(2);
   f = f / 1000;
@@ -585,6 +590,7 @@ void handleSummary()
     "</html>\n";
   httpserver.send(200, TEXTHTML, line);
   delay(100);
+  extmbquery = true;
 }
 
 // log page
@@ -624,6 +630,7 @@ void handleGetCSV()
 {
   writetosyslog(20);
   writetosyslog(24);
+  extmbquery = false;
   line = "\"" + HR_NAME[0] + "\",\"" + SWNAME + "\"\n"
          "\"" + HR_NAME[1] + "\",\"" + SWVERSION + "\"\n"
          "\"" + HR_NAME[2] + "\",\"" + mymacaddress + "\"\n"
@@ -636,6 +643,7 @@ void handleGetCSV()
     line += "\"" + DI_NAME[i] + "\",\"" + String(mbrtu.Ists(i)) + "\"\n";
   httpserver.send(200, TEXTPLAIN, line);
   delay(100);
+  extmbquery = true;
 }
 
 // get all measured values in JSON format
@@ -643,6 +651,7 @@ void handleGetJSON()
 {
   writetosyslog(20);
   writetosyslog(24);
+  extmbquery = false;
   line = "{\n"
          "  \"software\": {\n"
          "    \"" + HR_NAME[0] + "\": \"" + SWNAME + "\",\n"
@@ -675,6 +684,7 @@ void handleGetJSON()
     "}\n";
   httpserver.send(200, TEXTPLAIN, line);
   delay(100);
+  extmbquery = true;
 }
 
 // get all measured data in TXT format
@@ -682,6 +692,7 @@ void handleGetTXT()
 {
   writetosyslog(20);
   writetosyslog(24);
+  extmbquery = false;
   line = SWNAME + "\n" +
          SWVERSION + "\n" +
          mymacaddress + "\n" +
@@ -694,6 +705,7 @@ void handleGetTXT()
     line += String(mbrtu.Ists(i)) + "\n";
   httpserver.send(200, TEXTPLAIN, line);
   delay(100);
+  extmbquery = true;
 }
 
 // get all measured values in XML format
@@ -701,6 +713,7 @@ void handleGetXML()
 {
   writetosyslog(20);
   writetosyslog(24);
+  extmbquery = false;
   line = "<xml>\n"
          "  <software>\n"
          "    <" + HR_NAME[0] + ">" + SWNAME + "</" + HR_NAME[0] + ">\n"
@@ -727,6 +740,7 @@ void handleGetXML()
     "</xml>";
   httpserver.send(200, TEXTPLAIN, line);
   delay(100);
+  extmbquery = true;
 }
 
 // --- MAIN ---
@@ -815,9 +829,9 @@ void setup(void)
   mbrtu.addIreg(0, 0, 3);
   mbrtu.addHreg(0, 0, 28);
   // set Modbus callback
-  mbrtu.onGetIsts(0, modbusquery, 1);
-  mbrtu.onGetIreg(0, modbusquery, 1);
-  mbrtu.onGetHreg(0, modbusquery, 1);
+  mbrtu.onGetIsts(0, modbusquery, 3);
+  mbrtu.onGetIreg(0, modbusquery, 3);
+  mbrtu.onGetHreg(0, modbusquery, 28);
   // fill Modbus holding registers
   fillholdingregisters();
   // start webserver
