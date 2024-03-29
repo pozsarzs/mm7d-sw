@@ -589,8 +589,8 @@ void handleSummary()
     "  </body>\n"
     "</html>\n";
   httpserver.send(200, TEXTHTML, line);
-  delay(100);
   extmbquery = true;
+  delay(100);
 }
 
 // log page
@@ -642,8 +642,8 @@ void handleGetCSV()
   for (int i = 0; i < 3; i++)
     line += "\"" + DI_NAME[i] + "\",\"" + String(mbrtu.Ists(i)) + "\"\n";
   httpserver.send(200, TEXTPLAIN, line);
-  delay(100);
   extmbquery = true;
+  delay(100);
 }
 
 // get all measured values in JSON format
@@ -683,8 +683,8 @@ void handleGetJSON()
     "  }\n"
     "}\n";
   httpserver.send(200, TEXTPLAIN, line);
-  delay(100);
   extmbquery = true;
+  delay(100);
 }
 
 // get all measured data in TXT format
@@ -704,8 +704,8 @@ void handleGetTXT()
   for (int i = 0; i < 3; i++)
     line += String(mbrtu.Ists(i)) + "\n";
   httpserver.send(200, TEXTPLAIN, line);
-  delay(100);
   extmbquery = true;
+  delay(100);
 }
 
 // get all measured values in XML format
@@ -739,8 +739,8 @@ void handleGetXML()
     "  </data>\n"
     "</xml>";
   httpserver.send(200, TEXTPLAIN, line);
-  delay(100);
   extmbquery = true;
+  delay(100);
 }
 
 // --- MAIN ---
