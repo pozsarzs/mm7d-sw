@@ -1,5 +1,5 @@
 ## MM7D * RH/T measuring device  
-Copyright (C) 2023 Pozsár Zsolt <pozsarzs@gmail.com>  
+Copyright (C) 2020-2023 Pozsár Zsolt <pozsarzs@gmail.com>  
 Homepage: <http://www.pozsarzs.hu>  
 GitHub: <https://github.com/pozsarzs/mm7d-sw>
 

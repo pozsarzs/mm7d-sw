@@ -1,6 +1,6 @@
 // +---------------------------------------------------------------------------+
 // | MM7D v0.4 * T/RH measuring device                                         |
-// | Copyright (C) 2023 Pozsár Zsolt <pozsarzs@gmail.com>                      |
+// | Copyright (C) 2020-2023 Pozsár Zsolt <pozsarzs@gmail.com>                 |
 // | mm7d.ino                                                                  |
 // | Program for Adafruit Huzzah Breakout                                      |
 // +---------------------------------------------------------------------------+
